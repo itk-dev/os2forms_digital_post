@@ -116,8 +116,13 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       '#title' => $this->t('Select template'),
       '#options' => $listOfTemplates,
       '#default_value' => $this->configuration['template'],
+      '#required' => true,
     ];
 
+    // The channels available here are required by the
+    // Digital Post service. For more information see the
+    // specification for the PrintService (SF1600) on
+    // Serviceplatformen.
     $form['channel'] = [
       '#type' => 'select',
       '#title' => $this->t('Select channel'),
