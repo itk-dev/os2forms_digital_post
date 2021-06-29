@@ -65,6 +65,7 @@ class TemplateManager implements TemplateManagerInterface {
 
     if (true === $stream) {
       $domPdf->stream(); // Streams PDF to browser
+      return '';
     }
 
     return $domPdf->output(); //Returns PDF as string
