@@ -16,6 +16,14 @@
         "itk-dev/serviceplatformen": "^1.0",
         "php-http/guzzle6-adapter": "^2.0.1",
         "http-interop/http-factory-guzzle": "^1.0.0",
-        "symfony/property-access": "^4.4"
+        "symfony/property-access": "^4.4",
+        "wsdltophp/packagebase": "^5.0",
+        "dompdf/dompdf": "~0.8.0"
+    },
+    "autoload": {
+        "Drupal\\os2forms_digital_post\\": "src/"
+    },
+    "require-dev": {
+        "wsdltophp/packagegenerator": "^4.0"
     }
 }
