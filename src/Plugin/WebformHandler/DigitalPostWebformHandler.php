@@ -2,12 +2,12 @@
 
 namespace Drupal\os2forms_digital_post\Plugin\WebformHandler;
 
-use Drupal\Component\Utility\Xss;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Render\Markup;
+use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
+use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
 use Drupal\webform\Annotation\WebformHandler;
 use Drupal\webform\Plugin\WebformElementManagerInterface;
@@ -49,14 +49,20 @@ class DigitalPostWebformHandler extends WebformHandlerBase
 
   private $templateManager;
 
+  private $printServiceConsumer;
+
+  private $cprService;
+
   /**
    * {@inheritdoc}
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerChannelFactoryInterface $logger_factory, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, WebformSubmissionConditionsValidatorInterface $conditions_validator, WebformTokenManagerInterface $token_manager, WebformElementManagerInterface $element_manager, TemplateManager $templateManager) {
+  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerChannelFactoryInterface $logger_factory, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, WebformSubmissionConditionsValidatorInterface $conditions_validator, WebformTokenManagerInterface $token_manager, WebformElementManagerInterface $element_manager, TemplateManager $templateManager, PrintServiceConsumer $printServiceConsumer, CprServiceInterface $cprService) {
     parent::__construct($configuration, $plugin_id, $plugin_definition, $logger_factory, $config_factory, $entity_type_manager, $conditions_validator);
     $this->tokenManager = $token_manager;
     $this->elementManager = $element_manager;
     $this->templateManager = $templateManager;
+    $this->printServiceConsumer = $printServiceConsumer;
+    $this->cprService = $cprService;
   }
 
   /**
@@ -74,6 +80,8 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       $container->get('webform.token_manager'),
       $container->get('plugin.manager.webform.element'),
       $container->get('os2forms_digital_post.template_manager'),
+      $container->get('os2forms_digital_post.print_service_consumer'),
+      $container->get('os2forms_cpr_lookup.service')
     );
   }
 
@@ -127,11 +135,8 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       '#type' => 'select',
       '#title' => $this->t('Select channel'),
       '#options' => [
-        'D' => $this->t('Digital Post'),
-//        'F' => $this->t('Fysisk post'),
-//        'A' => $this->t('Automatisk på SP'),
-//        'P' => $this->t('Automatisk på Fjern-print'),
-//        'S' => $this->t('Nem SMS'),
+        'D' => $this->t('Digital Post'), // Only send the letter as Digital Post.
+        'A' => $this->t('Automatisk'), // Serviceplatformen decides if a citizen should have digital or physical mail based on the citizens registration.
       ],
       '#default_value' => $this->configuration['channel'],
     ];
@@ -141,17 +146,18 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       '#title' => $this->t('Priority'),
       '#options' => [
         'D' => $this->t('Direkte'),
-//        'M' => $this->t('Masseforsendelse')
       ],
       '#default_value' => $this->configuration['priority'],
     ];
 
     $form['cpr_element'] = [
-      '#type' => 'textfield',
+      '#type' => 'select',
       '#title' => $this->t('Element in form that contains the CPR number of the recipient'),
       '#required' => TRUE,
       '#default_value' => $this->configuration['cpr_element'],
+      '#options' => $availableElements,
     ];
+
 
     $form['document_title'] = [
       '#type' => 'textfield',
@@ -303,8 +309,22 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       ];
     }
 
+    /** @var \Drupal\os2forms_cpr_lookup\CPR\CprServiceResult $cprSearchResult */
+    $cprSearchResult = $this->cprService->search($submissionData[$this->configuration['cpr_element']]);
+
+    $recipient = [
+      'name' => $cprSearchResult->getName(),
+      'streetName' => $cprSearchResult->getStreetName(),
+      'streetNumber' => $cprSearchResult->getHouseNumber(),
+      'floor' => $cprSearchResult->getFloor(),
+      'side' => $cprSearchResult->getSide(),
+      'postalCode' => $cprSearchResult->getPostalCode(),
+      'city' => $cprSearchResult->getCity(),
+    ];
+
     $context = [
       'elements' => $elements,
+      'recipient' => $recipient,
     ];
 
     if (true === $this->configuration['debug']) {
@@ -312,10 +332,45 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       return;
     }
 
-    $pdf = $this->templateManager->renderPdf($this->configuration['template'], $context);
+    $result = false;
 
-    // Base64 encode pdf for digital post service
-    // Invoke the service
+    switch ($this->configuration['channel']) {
+      case 'A':
+        $result = $this->printServiceConsumer->afsendBrevPerson(
+          $this->configuration['channel'],
+          $this->configuration['priority'],
+          $submissionData[$this->configuration['cpr_element']],
+          $cprSearchResult->getName(),
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          'DK',
+          'PDF',
+          $this->templateManager->renderPdf($this->configuration['template'], $context),
+          $this->configuration['document_title']
+        );
+        break;
+      case 'D':
+        $result = $this->printServiceConsumer->afsendDigitalPostPerson(
+          $this->configuration['channel'],
+          $this->configuration['priority'],
+          $submissionData[$this->configuration['cpr_element']],
+          'PDF',
+          $this->templateManager->renderPdf($this->configuration['template'], $context),
+          $this->configuration['document_title']
+        );
+        break;
+    }
+
+    if (false === $result) {
+      // Throw an error?
+    }
   }
 
   /**

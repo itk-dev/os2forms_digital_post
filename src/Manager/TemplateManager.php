@@ -4,6 +4,7 @@ namespace Drupal\os2forms_digital_post\Manager;
 
 use Dompdf\Css\Stylesheet;
 use Dompdf\Dompdf;
+use Dompdf\Options;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Template\TwigEnvironment;
 use Twig\Loader\FilesystemLoader;
@@ -52,11 +53,16 @@ class TemplateManager implements TemplateManagerInterface {
 
     $html = $this->renderHtml($template, $context);
 
+
+    $options = new Options();
+    $options->setIsHtml5ParserEnabled(true);
     $domPdf = new Dompdf();
+    $domPdf->setPaper('A4', 'portrait');
 
     $pathToCss = $this->getPathToTemplate($template) . '/styles.css';
-    $stylesheet = new Stylesheet($domPdf);
     $cssAsString = file_get_contents($pathToCss);
+
+    $stylesheet = new Stylesheet($domPdf);
     $stylesheet->load_css($cssAsString);
     $domPdf->setCss($stylesheet);
 
