@@ -101,12 +101,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $this->getLogger()->debug('This was the form: ' . print_r($this->getWebform()->getElementsDecoded(), true));
 
-    $allElements = $this->getWebform()->getElementsDecoded();
-    $availableElements = [];
-
-    foreach ($allElements as $key => $element) {
-      $availableElements[$key] = $element['#title'];
-    }
+    $availableElements = $this->getAvailableElements($this->getWebform()->getElementsDecoded());
 
     $form['blacklist_elements_for_template'] = [
       '#type' => 'select',
@@ -180,6 +175,25 @@ class DigitalPostWebformHandler extends WebformHandlerBase
     ];
 
     return $this->setSettingsParents($form);
+  }
+
+  private function getAvailableElements(array $elements): array {
+    $availableElements = [];
+
+    foreach ($elements as $key => $element) {
+
+      // If the size of the element is above 2 the element has children elements.
+      if (sizeof($element) > 2) {
+        // The index 0 and 1 is the title and type of the element. All indexes after that
+        // is children elements.
+        $availableElements[$key] = $this->getAvailableElements(array_slice($element, 2));
+        continue;
+      }
+
+      $availableElements[$key] = $element['#title'];
+    }
+
+    return $availableElements;
   }
 
   /**
