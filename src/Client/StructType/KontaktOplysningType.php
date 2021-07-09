@@ -282,7 +282,7 @@ class KontaktOplysningType extends AbstractStructBase
             throw new InvalidArgumentException(sprintf('Invalid value %s, please provide a string, %s given', var_export($personName, true), gettype($personName)), __LINE__);
         }
         $this->PersonName = $personName;
-        
+
         return $this;
     }
     /**
@@ -332,7 +332,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -352,14 +352,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($coNavnChoiceErrorMessage = self::validateCoNavnForChoiceConstraintsFromSetCoNavn($coNavn))) {
-            throw new InvalidArgumentException($coNavnChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($coNavnChoiceErrorMessage, __LINE__);
         }
         if (is_null($coNavn) || (is_array($coNavn) && empty($coNavn))) {
             unset($this->CoNavn);
         } else {
             $this->CoNavn = $coNavn;
         }
-        
+
         return $this;
     }
     /**
@@ -409,7 +409,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -429,14 +429,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($streetNameChoiceErrorMessage = self::validateStreetNameForChoiceConstraintsFromSetStreetName($streetName))) {
-            throw new InvalidArgumentException($streetNameChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($streetNameChoiceErrorMessage, __LINE__);
         }
         if (is_null($streetName) || (is_array($streetName) && empty($streetName))) {
             unset($this->StreetName);
         } else {
             $this->StreetName = $streetName;
         }
-        
+
         return $this;
     }
     /**
@@ -486,7 +486,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -506,14 +506,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($streetBuildingIdentifierChoiceErrorMessage = self::validateStreetBuildingIdentifierForChoiceConstraintsFromSetStreetBuildingIdentifier($streetBuildingIdentifier))) {
-            throw new InvalidArgumentException($streetBuildingIdentifierChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($streetBuildingIdentifierChoiceErrorMessage, __LINE__);
         }
         if (is_null($streetBuildingIdentifier) || (is_array($streetBuildingIdentifier) && empty($streetBuildingIdentifier))) {
             unset($this->StreetBuildingIdentifier);
         } else {
             $this->StreetBuildingIdentifier = $streetBuildingIdentifier;
         }
-        
+
         return $this;
     }
     /**
@@ -563,7 +563,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -583,14 +583,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($floorIdentifierChoiceErrorMessage = self::validateFloorIdentifierForChoiceConstraintsFromSetFloorIdentifier($floorIdentifier))) {
-            throw new InvalidArgumentException($floorIdentifierChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($floorIdentifierChoiceErrorMessage, __LINE__);
         }
         if (is_null($floorIdentifier) || (is_array($floorIdentifier) && empty($floorIdentifier))) {
             unset($this->FloorIdentifier);
         } else {
             $this->FloorIdentifier = $floorIdentifier;
         }
-        
+
         return $this;
     }
     /**
@@ -640,7 +640,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -656,7 +656,7 @@ class KontaktOplysningType extends AbstractStructBase
     {
         // validation for constraint: string
         if (!is_null($suiteIdentifier) && !is_string($suiteIdentifier)) {
-            throw new InvalidArgumentException(sprintf('Invalid value %s, please provide a string, %s given', var_export($suiteIdentifier, true), gettype($suiteIdentifier)), __LINE__);
+            //throw new InvalidArgumentException(sprintf('Invalid value %s, please provide a string, %s given', var_export($suiteIdentifier, true), gettype($suiteIdentifier)), __LINE__);
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($suiteIdentifierChoiceErrorMessage = self::validateSuiteIdentifierForChoiceConstraintsFromSetSuiteIdentifier($suiteIdentifier))) {
@@ -667,7 +667,7 @@ class KontaktOplysningType extends AbstractStructBase
         } else {
             $this->SuiteIdentifier = $suiteIdentifier;
         }
-        
+
         return $this;
     }
     /**
@@ -717,7 +717,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -737,14 +737,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($mailDeliverySublocationIdentifierChoiceErrorMessage = self::validateMailDeliverySublocationIdentifierForChoiceConstraintsFromSetMailDeliverySublocationIdentifier($mailDeliverySublocationIdentifier))) {
-            throw new InvalidArgumentException($mailDeliverySublocationIdentifierChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($mailDeliverySublocationIdentifierChoiceErrorMessage, __LINE__);
         }
         if (is_null($mailDeliverySublocationIdentifier) || (is_array($mailDeliverySublocationIdentifier) && empty($mailDeliverySublocationIdentifier))) {
             unset($this->MailDeliverySublocationIdentifier);
         } else {
             $this->MailDeliverySublocationIdentifier = $mailDeliverySublocationIdentifier;
         }
-        
+
         return $this;
     }
     /**
@@ -807,7 +807,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -827,14 +827,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($postCodeIdentifierChoiceErrorMessage = self::validatePostCodeIdentifierForChoiceConstraintsFromSetPostCodeIdentifier($postCodeIdentifier))) {
-            throw new InvalidArgumentException($postCodeIdentifierChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($postCodeIdentifierChoiceErrorMessage, __LINE__);
         }
         if (is_null($postCodeIdentifier) || (is_array($postCodeIdentifier) && empty($postCodeIdentifier))) {
             unset($this->PostCodeIdentifier);
         } else {
             $this->PostCodeIdentifier = $postCodeIdentifier;
         }
-        
+
         return $this;
     }
     /**
@@ -884,7 +884,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -904,14 +904,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($districtSubdivisionIdentifierChoiceErrorMessage = self::validateDistrictSubdivisionIdentifierForChoiceConstraintsFromSetDistrictSubdivisionIdentifier($districtSubdivisionIdentifier))) {
-            throw new InvalidArgumentException($districtSubdivisionIdentifierChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($districtSubdivisionIdentifierChoiceErrorMessage, __LINE__);
         }
         if (is_null($districtSubdivisionIdentifier) || (is_array($districtSubdivisionIdentifier) && empty($districtSubdivisionIdentifier))) {
             unset($this->DistrictSubdivisionIdentifier);
         } else {
             $this->DistrictSubdivisionIdentifier = $districtSubdivisionIdentifier;
         }
-        
+
         return $this;
     }
     /**
@@ -961,7 +961,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -981,14 +981,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($postOfficeBoxIdentifierChoiceErrorMessage = self::validatePostOfficeBoxIdentifierForChoiceConstraintsFromSetPostOfficeBoxIdentifier($postOfficeBoxIdentifier))) {
-            throw new InvalidArgumentException($postOfficeBoxIdentifierChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($postOfficeBoxIdentifierChoiceErrorMessage, __LINE__);
         }
         if (is_null($postOfficeBoxIdentifier) || (is_array($postOfficeBoxIdentifier) && empty($postOfficeBoxIdentifier))) {
             unset($this->PostOfficeBoxIdentifier);
         } else {
             $this->PostOfficeBoxIdentifier = $postOfficeBoxIdentifier;
         }
-        
+
         return $this;
     }
     /**
@@ -1038,7 +1038,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -1058,14 +1058,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($postalAddressFirstLineTextChoiceErrorMessage = self::validatePostalAddressFirstLineTextForChoiceConstraintsFromSetPostalAddressFirstLineText($postalAddressFirstLineText))) {
-            throw new InvalidArgumentException($postalAddressFirstLineTextChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($postalAddressFirstLineTextChoiceErrorMessage, __LINE__);
         }
         if (is_null($postalAddressFirstLineText) || (is_array($postalAddressFirstLineText) && empty($postalAddressFirstLineText))) {
             unset($this->PostalAddressFirstLineText);
         } else {
             $this->PostalAddressFirstLineText = $postalAddressFirstLineText;
         }
-        
+
         return $this;
     }
     /**
@@ -1115,7 +1115,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -1135,14 +1135,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($postalAddressSecondLineTextChoiceErrorMessage = self::validatePostalAddressSecondLineTextForChoiceConstraintsFromSetPostalAddressSecondLineText($postalAddressSecondLineText))) {
-            throw new InvalidArgumentException($postalAddressSecondLineTextChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($postalAddressSecondLineTextChoiceErrorMessage, __LINE__);
         }
         if (is_null($postalAddressSecondLineText) || (is_array($postalAddressSecondLineText) && empty($postalAddressSecondLineText))) {
             unset($this->PostalAddressSecondLineText);
         } else {
             $this->PostalAddressSecondLineText = $postalAddressSecondLineText;
         }
-        
+
         return $this;
     }
     /**
@@ -1192,7 +1192,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -1212,14 +1212,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($postalAddressThirdLineTextChoiceErrorMessage = self::validatePostalAddressThirdLineTextForChoiceConstraintsFromSetPostalAddressThirdLineText($postalAddressThirdLineText))) {
-            throw new InvalidArgumentException($postalAddressThirdLineTextChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($postalAddressThirdLineTextChoiceErrorMessage, __LINE__);
         }
         if (is_null($postalAddressThirdLineText) || (is_array($postalAddressThirdLineText) && empty($postalAddressThirdLineText))) {
             unset($this->PostalAddressThirdLineText);
         } else {
             $this->PostalAddressThirdLineText = $postalAddressThirdLineText;
         }
-        
+
         return $this;
     }
     /**
@@ -1269,7 +1269,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -1289,14 +1289,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($postalAddressFourthLineTextChoiceErrorMessage = self::validatePostalAddressFourthLineTextForChoiceConstraintsFromSetPostalAddressFourthLineText($postalAddressFourthLineText))) {
-            throw new InvalidArgumentException($postalAddressFourthLineTextChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($postalAddressFourthLineTextChoiceErrorMessage, __LINE__);
         }
         if (is_null($postalAddressFourthLineText) || (is_array($postalAddressFourthLineText) && empty($postalAddressFourthLineText))) {
             unset($this->PostalAddressFourthLineText);
         } else {
             $this->PostalAddressFourthLineText = $postalAddressFourthLineText;
         }
-        
+
         return $this;
     }
     /**
@@ -1346,7 +1346,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -1366,14 +1366,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($postalAddressFifthLineTextChoiceErrorMessage = self::validatePostalAddressFifthLineTextForChoiceConstraintsFromSetPostalAddressFifthLineText($postalAddressFifthLineText))) {
-            throw new InvalidArgumentException($postalAddressFifthLineTextChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($postalAddressFifthLineTextChoiceErrorMessage, __LINE__);
         }
         if (is_null($postalAddressFifthLineText) || (is_array($postalAddressFifthLineText) && empty($postalAddressFifthLineText))) {
             unset($this->PostalAddressFifthLineText);
         } else {
             $this->PostalAddressFifthLineText = $postalAddressFifthLineText;
         }
-        
+
         return $this;
     }
     /**
@@ -1423,7 +1423,7 @@ class KontaktOplysningType extends AbstractStructBase
         } catch (InvalidArgumentException $e) {
             $message = $e->getMessage();
         }
-        
+
         return $message;
     }
     /**
@@ -1443,14 +1443,14 @@ class KontaktOplysningType extends AbstractStructBase
         }
         // validation for constraint: choice(CoNavn, StreetName, StreetBuildingIdentifier, FloorIdentifier, SuiteIdentifier, MailDeliverySublocationIdentifier, PostCodeIdentifier, DistrictSubdivisionIdentifier, PostOfficeBoxIdentifier, PostalAddressFirstLineText, PostalAddressSecondLineText, PostalAddressThirdLineText, PostalAddressFourthLineText, PostalAddressFifthLineText, PostalAddressSixthLineText)
         if ('' !== ($postalAddressSixthLineTextChoiceErrorMessage = self::validatePostalAddressSixthLineTextForChoiceConstraintsFromSetPostalAddressSixthLineText($postalAddressSixthLineText))) {
-            throw new InvalidArgumentException($postalAddressSixthLineTextChoiceErrorMessage, __LINE__);
+            //throw new InvalidArgumentException($postalAddressSixthLineTextChoiceErrorMessage, __LINE__);
         }
         if (is_null($postalAddressSixthLineText) || (is_array($postalAddressSixthLineText) && empty($postalAddressSixthLineText))) {
             unset($this->PostalAddressSixthLineText);
         } else {
             $this->PostalAddressSixthLineText = $postalAddressSixthLineText;
         }
-        
+
         return $this;
     }
     /**
@@ -1469,7 +1469,7 @@ class KontaktOplysningType extends AbstractStructBase
     public function setCountryIdentificationCode(?\Drupal\os2forms_digital_post\Client\StructType\CountryIdentificationCodeType $countryIdentificationCode = null): self
     {
         $this->CountryIdentificationCode = $countryIdentificationCode;
-        
+
         return $this;
     }
 }
