@@ -6,6 +6,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Render\Element;
 use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
 use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
@@ -182,11 +183,9 @@ class DigitalPostWebformHandler extends WebformHandlerBase
 
     foreach ($elements as $key => $element) {
 
-      // If the size of the element is above 2 the element has children elements.
-      if (sizeof($element) > 2) {
-        // The index 0 and 1 is the title and type of the element. All indexes after that
-        // is children elements.
-        $availableElements[$key] = $this->getAvailableElements(array_slice($element, 2));
+      $children = Element::children($element);
+      if (!empty($children)) {
+        $availableElements[$key] = $this->getAvailableElements(array_intersect_key($element, array_flip($children)));
         continue;
       }
 
