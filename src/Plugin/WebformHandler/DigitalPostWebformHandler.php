@@ -6,6 +6,7 @@ use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\Core\Render\Element;
 use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
 use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
@@ -101,12 +102,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $this->getLogger()->debug('This was the form: ' . print_r($this->getWebform()->getElementsDecoded(), true));
 
-    $allElements = $this->getWebform()->getElementsDecoded();
-    $availableElements = [];
-
-    foreach ($allElements as $key => $element) {
-      $availableElements[$key] = $element['#title'];
-    }
+    $availableElements = $this->getAvailableElements($this->getWebform()->getElementsDecoded());
 
     $form['blacklist_elements_for_template'] = [
       '#type' => 'select',
@@ -180,6 +176,23 @@ class DigitalPostWebformHandler extends WebformHandlerBase
     ];
 
     return $this->setSettingsParents($form);
+  }
+
+  private function getAvailableElements(array $elements): array {
+    $availableElements = [];
+
+    foreach ($elements as $key => $element) {
+
+      $children = Element::children($element);
+      if (!empty($children)) {
+        $availableElements[$key] = $this->getAvailableElements(array_intersect_key($element, array_flip($children)));
+        continue;
+      }
+
+      $availableElements[$key] = $element['#title'];
+    }
+
+    return $availableElements;
   }
 
   /**
