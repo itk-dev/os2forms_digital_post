@@ -29,9 +29,13 @@ class TemplateManager implements TemplateManagerInterface {
 
     $listOfTemplates = [];
 
+    // This list of directory names will not be showed as available templates
+    // in the handlers settings page.
+    $ignoredDirectories = ['.git'];
+
     $directoryIterator = new \DirectoryIterator($pathToTemplates);
     foreach ($directoryIterator as $fileInfo) {
-      if (!$fileInfo->isDir() || $fileInfo->isDot()) {
+      if (!$fileInfo->isDir() || $fileInfo->isDot() || in_array($fileInfo->getBasename(), $ignoredDirectories)) {
         continue;
       }
 
