@@ -27,7 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   label = @Translation("Digital Post"),
  *   category = @Translation("Web services"),
  *   description = @Translation("Sends webform submission as Digital Post."),
- *   cardinality = \Drupal\webform\Plugin\WebformHandlerInterface::CARDINALITY_SINGLE,
+ *   cardinality = \Drupal\webform\Plugin\WebformHandlerInterface::CARDINALITY_UNLIMITED,
  *   results = \Drupal\webform\Plugin\WebformHandlerInterface::RESULTS_IGNORED,
  *   submission = \Drupal\webform\Plugin\WebformHandlerInterface::SUBMISSION_REQUIRED,
  * )
