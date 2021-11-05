@@ -184,12 +184,14 @@ class DigitalPostWebformHandler extends WebformHandlerBase
     foreach ($elements as $key => $element) {
 
       $children = Element::children($element);
+
       if (!empty($children)) {
-        $availableElements[$key] = $this->getAvailableElements(array_intersect_key($element, array_flip($children)));
+
+        $availableElements = array_merge($availableElements, $this->getAvailableElements(array_intersect_key($element, array_flip($children))));
         continue;
       }
 
-      $availableElements[$key] = $element['#title'];
+      $availableElements[] = $element['#title'];
     }
 
     return $availableElements;
