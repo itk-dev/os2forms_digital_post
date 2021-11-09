@@ -27,7 +27,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   label = @Translation("Digital Post"),
  *   category = @Translation("Web services"),
  *   description = @Translation("Sends webform submission as Digital Post."),
- *   cardinality = \Drupal\webform\Plugin\WebformHandlerInterface::CARDINALITY_SINGLE,
+ *   cardinality = \Drupal\webform\Plugin\WebformHandlerInterface::CARDINALITY_UNLIMITED,
  *   results = \Drupal\webform\Plugin\WebformHandlerInterface::RESULTS_IGNORED,
  *   submission = \Drupal\webform\Plugin\WebformHandlerInterface::SUBMISSION_REQUIRED,
  * )
@@ -184,12 +184,14 @@ class DigitalPostWebformHandler extends WebformHandlerBase
     foreach ($elements as $key => $element) {
 
       $children = Element::children($element);
+
       if (!empty($children)) {
-        $availableElements[$key] = $this->getAvailableElements(array_intersect_key($element, array_flip($children)));
+
+        $availableElements = array_merge($availableElements, $this->getAvailableElements(array_intersect_key($element, array_flip($children))));
         continue;
       }
 
-      $availableElements[$key] = $element['#title'];
+      $availableElements[] = $element['#title'];
     }
 
     return $availableElements;
