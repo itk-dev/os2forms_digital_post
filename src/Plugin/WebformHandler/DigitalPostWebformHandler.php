@@ -191,7 +191,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase
         continue;
       }
 
-      $availableElements[] = $element['#title'];
+      $availableElements[$key] = $element['#title'];
     }
 
     return $availableElements;
