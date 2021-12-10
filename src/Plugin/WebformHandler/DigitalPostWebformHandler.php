@@ -324,6 +324,14 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       ];
     }
 
+    if (!array_key_exists($this->configuration['cpr_element'], $submissionData)) {
+      $this->getLogger()->error(
+        'The chosen CPR element not found in submission!'
+      );
+
+      throw new \CprElementNotFoundInSubmissionException();
+    }
+
     /** @var \Drupal\os2forms_cpr_lookup\CPR\CprServiceResult $cprSearchResult */
     $cprSearchResult = $this->cprService->search($submissionData[$this->configuration['cpr_element']]);
 
