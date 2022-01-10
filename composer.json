@@ -1,5 +1,5 @@
 {
-    "name": "itk-dev/os2forms-digital-post",
+    "name": "itk-dev/os2forms_digital_post",
     "description": "Provides integration to Print service provided by Serviceplatformen.",
     "type": "drupal-module",
     "license": "MIT",
