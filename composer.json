@@ -25,7 +25,7 @@
         "symfony/property-access": "^4.4",
         "wsdltophp/packagebase": "^5.0",
         "dompdf/dompdf": "~0.8.0",
-        "os2forms/os2forms": "^2.5",
+        "os2forms/os2forms": "^3.0",
         "itk-dev/os2forms-cpr-lookup": "^1.1"
     },
     "autoload": {
