@@ -7,7 +7,7 @@ Send Digital Post to danish citizens from a webform.
 Require it with composer:
 
 ```shell
-composer require "itk-dev/os2forms-digital-post"
+composer require "itk-dev/os2forms_digital_post"
 ```
 
 Enable it with drush:
@@ -43,7 +43,7 @@ $config['os2forms_digital_post'] = [
 
   'service_uuid' => 'fd885b8b-4a3f-46cb-b367-6c9dda1c78f6',
   'service_endpoint' => 'https://prod.serviceplatformen.dk/service/Print/Print/2',
-  'service_contract' => dirname(DRUPAL_ROOT) . '/web/modules/contrib/os2forms-digital-post/resources/contracts/PrintService/wsdl/context/PrintService.wsdl',
+  'service_contract' => dirname(DRUPAL_ROOT) . '/web/modules/contrib/os2forms_digital_post/resources/contracts/PrintService/wsdl/context/PrintService.wsdl',
 ];
 
 ```
