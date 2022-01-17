@@ -2,21 +2,16 @@
 
 namespace Drupal\os2forms_digital_post\Plugin\WebformHandler;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\Element;
 use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
 use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
+use Drupal\os2forms_digital_post\Exception\CprElementNotFoundInSubmissionException;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
 use Drupal\webform\Annotation\WebformHandler;
-use Drupal\webform\Plugin\WebformElementManagerInterface;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\webform\WebformInterface;
-use Drupal\webform\WebformSubmissionConditionsValidatorInterface;
 use Drupal\webform\WebformSubmissionInterface;
-use Drupal\webform\WebformTokenManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -48,42 +43,42 @@ class DigitalPostWebformHandler extends WebformHandlerBase
    */
   protected $elementManager;
 
-  private $templateManager;
-
-  private $printServiceConsumer;
-
-  private $cprService;
+  /**
+   * @var TemplateManager
+   */
+  protected $templateManager;
 
   /**
-   * {@inheritdoc}
+   * @var PrintServiceConsumer
    */
-  public function __construct(array $configuration, $plugin_id, $plugin_definition, LoggerChannelFactoryInterface $logger_factory, ConfigFactoryInterface $config_factory, EntityTypeManagerInterface $entity_type_manager, WebformSubmissionConditionsValidatorInterface $conditions_validator, WebformTokenManagerInterface $token_manager, WebformElementManagerInterface $element_manager, TemplateManager $templateManager, PrintServiceConsumer $printServiceConsumer, CprServiceInterface $cprService) {
-    parent::__construct($configuration, $plugin_id, $plugin_definition, $logger_factory, $config_factory, $entity_type_manager, $conditions_validator);
-    $this->tokenManager = $token_manager;
-    $this->elementManager = $element_manager;
-    $this->templateManager = $templateManager;
-    $this->printServiceConsumer = $printServiceConsumer;
-    $this->cprService = $cprService;
-  }
+  protected $printServiceConsumer;
+
+  /**
+   * @var CprServiceInterface
+   */
+  protected $cprService;
 
   /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
-    return new static(
-      $configuration,
-      $plugin_id,
-      $plugin_definition,
-      $container->get('logger.factory'),
-      $container->get('config.factory'),
-      $container->get('entity_type.manager'),
-      $container->get('webform_submission.conditions_validator'),
-      $container->get('webform.token_manager'),
-      $container->get('plugin.manager.webform.element'),
-      $container->get('os2forms_digital_post.template_manager'),
-      $container->get('os2forms_digital_post.print_service_consumer'),
-      $container->get('os2forms_cpr_lookup.service')
-    );
+    $instance = new static($configuration, $plugin_id, $plugin_definition);
+
+    $instance->loggerFactory = $container->get('logger.factory');
+    $instance->configFactory = $container->get('config.factory');
+    $instance->renderer = $container->get('renderer');
+    $instance->entityTypeManager = $container->get('entity_type.manager');
+    $instance->conditionsValidator = $container->get('webform_submission.conditions_validator');
+    $instance->tokenManager = $container->get('webform.token_manager');
+
+    $instance->elementManager = $container->get('plugin.manager.webform.element');
+    $instance->templateManager = $container->get('os2forms_digital_post.template_manager');
+    $instance->printServiceConsumer = $container->get('os2forms_digital_post.print_service_consumer');
+    $instance->cprService = $container->get('os2forms_cpr_lookup.service');
+
+    $instance->setConfiguration($configuration);
+
+    return $instance;
   }
 
   /**
@@ -329,7 +324,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase
         'The chosen CPR element not found in submission!'
       );
 
-      throw new \CprElementNotFoundInSubmissionException();
+      throw new CprElementNotFoundInSubmissionException();
     }
 
     /** @var \Drupal\os2forms_cpr_lookup\CPR\CprServiceResult $cprSearchResult */
