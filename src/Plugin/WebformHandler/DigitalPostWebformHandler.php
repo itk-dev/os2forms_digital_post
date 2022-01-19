@@ -314,8 +314,9 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       $element = $this->webform->getElement($key);
 
       $elements[] = [
+        'label' => $this->webform->label(),
         'name' => $element['#title'],
-        'value' => $value,
+        'value' => isset($element['#return_value']) ? $element['#return_value'] : $value,
       ];
     }
 
