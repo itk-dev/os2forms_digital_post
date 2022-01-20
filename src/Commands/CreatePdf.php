@@ -5,10 +5,9 @@ namespace Drupal\os2forms_digital_post\Commands;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drush\Commands\DrushCommands;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
-use Drupal\Core\Config\ConfigFactoryInterface;
 
 /**
- * A drush command file.
+ * A drush command file for commands related to os2forms_digital_post.
  *
  * @package Drupal\event_database_pull\Commands
  */
@@ -35,7 +34,7 @@ class CreatePdf extends DrushCommands {
   }
 
   /**
-   * Create PDF named test.pdf in current directory.
+   * Create PDF in directory relative to Drupal root directory.
    *
    * @param string $template
    *   The template name to use.
@@ -50,30 +49,28 @@ class CreatePdf extends DrushCommands {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function create($template, $options = ['submission_id'=> 0]) {
+  public function create($template, $options = ['submission_id' => 0, 'file_location' => '', 'file_name' => 'test.pdf']) {
     $elements[] = [];
     $webformLabel = '';
-    if (0 < $options['submission_id']) {
-      $webform_submission = $this->entityTypeManager->getStorage('webform_submission')->load($options['submission_id']);
-      if ($webform_submission) {
-        $webform = $webform_submission->getWebform();
-        $webformLabel = $webform->label();
-        $submissionData = $webform_submission->getData();
-        foreach ($submissionData as $key => $value) {
-          $element = $webform->getElement($key, TRUE);
-          $elements[] = [
-            'name' => $element['#title'],
-            'value' => isset($element['#return_value']) ? $element['#return_value'] : $value,
-          ];
-        }
+    $webform_submission = $this->entityTypeManager->getStorage('webform_submission')->load($options['submission_id']);
+    if ($webform_submission) {
+      $webform = $webform_submission->getWebform();
+      $webformLabel = $webform->label();
+      $submissionData = $webform_submission->getData();
+      foreach ($submissionData as $key => $value) {
+        $element = $webform->getElement($key, TRUE);
+        $elements[] = [
+          'name' => $element['#title'],
+          'value' => $element['#return_value'] ?? $value,
+        ];
       }
-      else {
-        $this->output()->writeln('Submission id: ' . $options['submission_id'] . ' not found. An empty ' . $template . ' template was created.');
-      }
+    }
+    else {
+      $this->output()->writeln('Submission id: ' . $options['submission_id'] . ' not found. An empty ' . $template . ' template was created.');
     }
 
     $recipient = [
-      'name' => 'Test testersen',
+      'name' => 'Test Testersen',
       'streetName' => 'Testervej',
       'streetNumber' => '1',
       'floor' => '2',
@@ -90,6 +87,8 @@ class CreatePdf extends DrushCommands {
 
     $pathToTemplate = $template;
     $pdf = $this->templateManager->renderPdf($pathToTemplate, $context);
-    file_put_contents('test.pdf', $pdf);
+    $filePath = dirname(DRUPAL_ROOT) . $options['file_location'] . '/' . $options['file_name'];
+    file_put_contents($filePath, $pdf);
+    $this->output()->writeln(sprintf('Pdf written to %s', $filePath));
   }
 }

@@ -90,3 +90,12 @@ Apply coding standards:
 ```shell
 composer coding-standards-apply
 ```
+
+## Drush command
+
+A drush command is available for testing purposes. It creates a PDF from a template and a given submission.
+
+Read more:
+```shell
+drush os2forms_digital_post:create_pdf --help
+```
