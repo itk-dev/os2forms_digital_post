@@ -331,12 +331,19 @@ class DigitalPostWebformHandler extends WebformHandlerBase
     /** @var \Drupal\os2forms_cpr_lookup\CPR\CprServiceResult $cprSearchResult */
     $cprSearchResult = $this->cprService->search($submissionData[$this->configuration['cpr_element']]);
 
+    // We cannot use “side” (from address lookup via cpr) as “suiteIdentifier”
+    // when sending digital port. Therefore we append it to “floor” instead.
+    $floor = $cprSearchResult->getFloor();
+    if (!empty($cprSearchResult->getSide())) {
+      $floor .= ' '.$cprSearchResult->getSide();
+    }
+
     $recipient = [
       'name' => $cprSearchResult->getName(),
       'streetName' => $cprSearchResult->getStreetName(),
       'streetNumber' => $cprSearchResult->getHouseNumber(),
-      'floor' => $cprSearchResult->getFloor(),
-      'side' => $cprSearchResult->getSide(),
+      'floor' => $floor,
+      'side' => null,
       'postalCode' => $cprSearchResult->getPostalCode(),
       'city' => $cprSearchResult->getCity(),
     ];
@@ -363,8 +370,8 @@ class DigitalPostWebformHandler extends WebformHandlerBase
           null,
           $cprSearchResult->getStreetName(),
           $cprSearchResult->getHouseNumber(),
-          $cprSearchResult->getFloor(),
-          $cprSearchResult->getSide(),
+          $floor,
+          null,
           null,
           $cprSearchResult->getPostalCode(),
           null,
