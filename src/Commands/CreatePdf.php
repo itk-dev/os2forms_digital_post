@@ -3,8 +3,10 @@
 namespace Drupal\os2forms_digital_post\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
 use Drush\Commands\DrushCommands;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
+use Drupal\os2forms_digital_post\Helper\WebformHelper;
 
 /**
  * A drush command file for commands related to os2forms_digital_post.
@@ -12,6 +14,13 @@ use Drupal\os2forms_digital_post\Manager\TemplateManager;
  * @package Drupal\event_database_pull\Commands
  */
 class CreatePdf extends DrushCommands {
+
+  /**
+   * The os2forms_digital_post webform helper.
+   *
+   * @var \Drupal\os2forms_digital_post\WebformHelper
+   */
+  protected WebformHelper $webformHelper;
 
   /**
    * The os2forms_digital_post template manager.
@@ -30,8 +39,9 @@ class CreatePdf extends DrushCommands {
   /**
    * Constructor.
    */
-  public function __construct(TemplateManager $templateManager, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(WebformHelper $webformHelper, TemplateManager $templateManager, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct();
+    $this->webformHelper = $webformHelper;
     $this->templateManager = $templateManager;
     $this->entityTypeManager = $entity_type_manager;
   }
@@ -58,42 +68,35 @@ class CreatePdf extends DrushCommands {
     'file_name' => 'test.pdf',
   ]) {
     $elements[] = [];
-    $webformLabel = '';
     $webform_submission = $this->entityTypeManager->getStorage('webform_submission')->load($options['submission_id']);
-    if ($webform_submission) {
-      $webform = $webform_submission->getWebform();
-      $webformLabel = $webform->label();
-      $submissionData = $webform_submission->getData();
-      foreach ($submissionData as $key => $value) {
-        $element = $webform->getElement($key, TRUE);
-        $elements[] = [
-          'name' => $element['#title'],
-          'value' => $element['#return_value'] ?? $value,
-        ];
-      }
-    }
-    else {
-      $this->output()->writeln('Submission id: ' . $options['submission_id'] . ' not found. An empty ' . $template . ' template was created.');
+
+    if (!$webform_submission) {
+      $this->output()->writeln(sprintf('Submission id %s not found.', $options['submission_id']));
+      return;
     }
 
-    $recipient = [
-      'name' => 'Test Testersen',
-      'streetName' => 'Testervej',
-      'streetNumber' => '1',
-      'floor' => '2',
-      'side' => 'tv',
-      'postalCode' => '8000',
-      'city' => 'Aarhus C.',
-    ];
+    $cprServiceResult = new CprServiceResult(json_decode(json_encode([
+      'persondata' => [
+        'navn' => [
+          'fornavn' => 'Test',
+          'efternavn' => 'Testersen',
+        ],
+      ],
+      'adresse' => [
+        'aktuelAdresse' => [
+          'vejnavn' => 'Testervej',
+          'husnummer' => '1',
+          'etage' => '2',
+          'sidedoer' => 'tv',
+          'postnummer' => '8000',
+          'postdistrikt' => 'Aarhus C',
+        ],
+      ],
+    ])));
 
-    $context = [
-      'label' => $webformLabel,
-      'elements' => $elements,
-      'recipient' => $recipient,
-    ];
+    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprServiceResult, []);
 
-    $pathToTemplate = $template;
-    $pdf = $this->templateManager->renderPdf($pathToTemplate, $context);
+    $pdf = $this->templateManager->renderPdf($template, $context);
     $filePath = dirname(DRUPAL_ROOT) . $options['file_location'] . '/' . $options['file_name'];
     file_put_contents($filePath, $pdf);
     $this->output()->writeln(sprintf('Pdf written to %s', $filePath));

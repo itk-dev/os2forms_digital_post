@@ -6,3 +6,6 @@ services:
   os2forms_digital_post.print_service_consumer:
     class: Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer
     arguments: ["@config.factory", "@http_client", "@lock", "@state", "@uuid"]
+
+  os2forms_digital_post.webform_helper:
+    class: Drupal\os2forms_digital_post\Helper\WebformHelper
