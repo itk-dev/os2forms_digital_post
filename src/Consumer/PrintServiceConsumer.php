@@ -2,6 +2,7 @@
 
 namespace Drupal\os2forms_digital_post\Consumer;
 
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\State\State;
@@ -27,20 +28,53 @@ use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
 use ItkDev\AzureKeyVault\KeyVault\VaultSecret;
 
 /**
- *
+ * Print service consumer.
  */
 class PrintServiceConsumer {
+  /**
+   * The config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  private ImmutableConfig $config;
 
-  private $config;
-  private $guzzleClient;
-  private $lock;
-  private $state;
+  /**
+   * The client.
+   *
+   * @var \GuzzleHttp\Client
+   */
+  private Client $guzzleClient;
+
+  /**
+   * The lock.
+   *
+   * @var \Drupal\Core\Lock\LockBackendInterface
+   */
+  private LockBackendInterface $lock;
+
+  /**
+   * The state.
+   *
+   * @var \Drupal\Core\State\State
+   */
+  private State $state;
+
+  /**
+   * The UUID generator.
+   *
+   * @var UuidInterface
+   */
   private $uuid;
 
+  /**
+   * The lock name.
+   *
+   * @var string
+   */
   private $lockName = 'os2forms_digital_post_print_service';
 
   /**
-   *
+   * Constructor.
    */
   public function __construct(ConfigFactoryInterface $configFactory, Client $guzzleClient, LockBackendInterface $lock, State $state) {
 
@@ -52,7 +86,7 @@ class PrintServiceConsumer {
   }
 
   /**
-   *
+   * Afsend brev person.
    */
   public function afsendBrevPerson(
     string $kanalValg = NULL,
@@ -163,7 +197,7 @@ class PrintServiceConsumer {
   }
 
   /**
-   *
+   * Get absolute path to certificate.
    */
   private function getAzureKeyVaultCertificateLocator(
     string $tenantId,
@@ -199,7 +233,7 @@ class PrintServiceConsumer {
   }
 
   /**
-   *
+   * Afsend digital post person.
    */
   public function afsendDigitalPostPerson(
     string $kanalValg = NULL,
@@ -276,7 +310,7 @@ class PrintServiceConsumer {
   }
 
   /**
-   *
+   * Generate afsendelse identifikator.
    */
   protected function generateAfsendelseIdentifikator(): string {
 
@@ -296,21 +330,21 @@ class PrintServiceConsumer {
   }
 
   /**
-   *
+   * Acquire lock.
    */
   protected function acquireLock(): bool {
     return $this->lock->acquire($this->lockName);
   }
 
   /**
-   *
+   * Release lock.
    */
   protected function releaseLock() {
     $this->lock->release($this->lockName);
   }
 
   /**
-   *
+   * Wait lock.
    */
   protected function waitLock(): bool {
     return $this->lock->wait($this->lockName);

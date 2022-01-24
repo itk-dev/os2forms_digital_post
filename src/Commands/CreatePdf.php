@@ -28,7 +28,7 @@ class CreatePdf extends DrushCommands {
   protected $entityTypeManager;
 
   /**
-   *
+   * Constructor.
    */
   public function __construct(TemplateManager $templateManager, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct();
@@ -52,7 +52,11 @@ class CreatePdf extends DrushCommands {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function create($template, $options = ['submission_id' => 0, 'file_location' => '', 'file_name' => 'test.pdf']) {
+  public function create($template, array $options = [
+    'submission_id' => 0,
+    'file_location' => '',
+    'file_name' => 'test.pdf',
+  ]) {
     $elements[] = [];
     $webformLabel = '';
     $webform_submission = $this->entityTypeManager->getStorage('webform_submission')->load($options['submission_id']);

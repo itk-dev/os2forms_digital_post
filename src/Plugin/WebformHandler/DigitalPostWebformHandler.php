@@ -39,16 +39,22 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
   protected $elementManager;
 
   /**
+   * The template manager.
+   *
    * @var \Drupal\os2forms_digital_post\Manager\TemplateManager
    */
   protected $templateManager;
 
   /**
+   * The print service consumer.
+   *
    * @var \Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer
    */
   protected $printServiceConsumer;
 
   /**
+   * The cpr service.
+   *
    * @var \Drupal\os2forms_cpr_lookup\Service\CprServiceInterface
    */
   protected $cprService;
@@ -121,9 +127,10 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
       '#type' => 'select',
       '#title' => $this->t('Select channel'),
       '#options' => [
-    // Only send the letter as Digital Post.
+        // Only send the letter as Digital Post.
         'D' => $this->t('Digital Post'),
-    // Serviceplatformen decides if a citizen should have digital or physical mail based on the citizens registration.
+        // Serviceplatformen decides if a citizen should have digital or
+        // physical mail based on the citizens registration.
         'A' => $this->t('Automatisk'),
       ],
       '#default_value' => $this->configuration['channel'],
@@ -170,7 +177,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
   }
 
   /**
-   *
+   * Get available elements.
    */
   private function getAvailableElements(array $elements): array {
     $availableElements = [];
@@ -247,9 +254,6 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
    * {@inheritdoc}
    */
   public function confirmForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission) {
-    // $message = $this->configuration['message'];
-    //    $message = $this->replaceTokens($message, $this->getWebformSubmission());
-    //    $this->messenger()->addStatus(Markup::create(Xss::filter($message)), FALSE);
     $this->debug(__FUNCTION__);
   }
 

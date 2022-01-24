@@ -2,6 +2,7 @@
 
 namespace Drupal\os2forms_digital_post\Manager;
 
+use Drupal\Core\Config\ImmutableConfig;
 use Dompdf\Css\Stylesheet;
 use Dompdf\Dompdf;
 use Dompdf\Options;
@@ -10,15 +11,25 @@ use Drupal\Core\Template\TwigEnvironment;
 use Twig\Loader\FilesystemLoader;
 
 /**
- *
+ * Template manager.
  */
 class TemplateManager implements TemplateManagerInterface {
-
-  private $config;
-  private $twigEnvironment;
+  /**
+   * The config.
+   *
+   * @var \Drupal\Core\Config\ImmutableConfig
+   */
+  private ImmutableConfig $config;
 
   /**
+   * The Twig environment.
    *
+   * @var \Drupal\Core\Template\TwigEnvironment
+   */
+  private TwigEnvironment $twigEnvironment;
+
+  /**
+   * Constructor.
    */
   public function __construct(ConfigFactoryInterface $configFactory, TwigEnvironment $twigEnvironment, FilesystemLoader $filesystemLoader) {
     $this->config = $configFactory->get('os2forms_digital_post');
@@ -51,7 +62,7 @@ class TemplateManager implements TemplateManagerInterface {
   }
 
   /**
-   *
+   * {@inheritDoc}
    */
   public function renderHtml(string $template, array $context = []): string {
 
@@ -62,7 +73,7 @@ class TemplateManager implements TemplateManagerInterface {
   }
 
   /**
-   *
+   * {@inheritDoc}
    */
   public function renderPdf(string $template, array $context = [], bool $stream = FALSE): string {
 
@@ -94,7 +105,7 @@ class TemplateManager implements TemplateManagerInterface {
   }
 
   /**
-   *
+   * Get path to base64encoded logo.
    */
   private function getPathToBase64EncodedLogo($template): string {
     $pathToLogo = $this->getPathToTemplate($template) . '/logo.png';
@@ -111,7 +122,7 @@ class TemplateManager implements TemplateManagerInterface {
   }
 
   /**
-   *
+   * Get path to template.
    */
   private function getPathToTemplate(string $template): string {
     return $this->config->get('path_to_templates') . '/' . $template;

@@ -3,7 +3,7 @@
 namespace Drupal\os2forms_digital_post\Manager;
 
 /**
- *
+ * Template manager interface.
  */
 interface TemplateManagerInterface {
 
