@@ -2,6 +2,9 @@
 
 namespace Drupal\os2forms_digital_post\Manager;
 
+/**
+ *
+ */
 interface TemplateManagerInterface {
 
   /**
@@ -11,4 +14,5 @@ interface TemplateManagerInterface {
    *   List of available templates.
    */
   public function getAvailableTemplates(): array;
+
 }

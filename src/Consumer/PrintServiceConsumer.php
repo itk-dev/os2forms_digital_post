@@ -17,10 +17,8 @@ use Drupal\os2forms_digital_post\Client\StructType\InvocationContextType;
 use Drupal\os2forms_digital_post\Client\StructType\KontaktOplysningType;
 use Drupal\os2forms_digital_post\Client\StructType\PrintAfsendBrevRequestType;
 use Drupal\os2forms_digital_post\Client\StructType\SlutbrugerIdentitetType;
-use Exception;
 use ItkDev\Serviceplatformen\Certificate\AzureKeyVaultCertificateLocator;
 use ItkDev\Serviceplatformen\Certificate\CertificateLocatorInterface;
-use SoapFault;
 use WsdlToPhp\PackageBase\AbstractSoapClientBase;
 use GuzzleHttp\Client;
 use Http\Factory\Guzzle\RequestFactory;
@@ -28,6 +26,9 @@ use ItkDev\AzureKeyVault\Authorisation\VaultToken;
 use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
 use ItkDev\AzureKeyVault\KeyVault\VaultSecret;
 
+/**
+ *
+ */
 class PrintServiceConsumer {
 
   private $config;
@@ -38,6 +39,9 @@ class PrintServiceConsumer {
 
   private $lockName = 'os2forms_digital_post_print_service';
 
+  /**
+   *
+   */
   public function __construct(ConfigFactoryInterface $configFactory, Client $guzzleClient, LockBackendInterface $lock, State $state) {
 
     $this->config = $configFactory->get('os2forms_digital_post');
@@ -47,25 +51,28 @@ class PrintServiceConsumer {
     $this->uuid = \Drupal::service('uuid');
   }
 
+  /**
+   *
+   */
   public function afsendBrevPerson(
-    string $kanalValg = null,
-    string $prioritet = null,
-    string $cprNummerIdentifikator = null,
-    string $personName = null,
-    string $coNavn = null,
-    string $streetName = null,
-    string $streetBuildingIdentifier = null,
-    string $floorIdentifier = null,
-    string $suiteIdentifier = null,
-    string $mailDeliverySublocationIdentifier = null,
-    string $postCodeIdentifier = null,
-    string $districtSubdivisionIdentifier = null,
-    string $postOfficeBoxIdentifier = null,
-    string $countryIdentificationCode = null,
-    string $filFormatNavn = null,
-    string $meddelelseIndholdData = null,
-    string $titelTekst = null,
-    string $brevDato = null
+    string $kanalValg = NULL,
+    string $prioritet = NULL,
+    string $cprNummerIdentifikator = NULL,
+    string $personName = NULL,
+    string $coNavn = NULL,
+    string $streetName = NULL,
+    string $streetBuildingIdentifier = NULL,
+    string $floorIdentifier = NULL,
+    string $suiteIdentifier = NULL,
+    string $mailDeliverySublocationIdentifier = NULL,
+    string $postCodeIdentifier = NULL,
+    string $districtSubdivisionIdentifier = NULL,
+    string $postOfficeBoxIdentifier = NULL,
+    string $countryIdentificationCode = NULL,
+    string $filFormatNavn = NULL,
+    string $meddelelseIndholdData = NULL,
+    string $titelTekst = NULL,
+    string $brevDato = NULL
   ) {
 
     if (!$this->acquireLock()) {
@@ -94,12 +101,12 @@ class PrintServiceConsumer {
       $postCodeIdentifier,
       $districtSubdivisionIdentifier,
       $postOfficeBoxIdentifier,
-      null,
-      null,
-      null,
-      null,
-      null,
-      null,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
+      NULL,
       $countryIdentificationCodeType
     );
 
@@ -114,10 +121,10 @@ class PrintServiceConsumer {
       $forsendelsesModtager,
       $filFormatNavn,
       $meddelelseIndholdData,
-      null,
+      NULL,
       $dokumentParametre,
-      null,
-      null,
+      NULL,
+      NULL,
       $digitalPostParametre
     );
 
@@ -140,21 +147,24 @@ class PrintServiceConsumer {
       AbstractSoapClientBase::WSDL_LOCATION => $this->config->get('service_endpoint'),
     ]);
 
-
     $response = $client->afsendBrev($request);
 
     $this->releaseLock();
 
-    if (false === $response) {
+    if (FALSE === $response) {
       $lastError = $client->getLastError();
-      /* @var $soapError SoapFault */
+      /** @var SoapFault $soapError */
       $soapError = $lastError['Drupal\os2forms_digital_post\Client\ServiceType\Afsend::afsendBrev'];
-      throw new Exception($soapError->getMessage(), $soapError->getCode()); // Should maybe log this instead!
+      // Should maybe log this instead!
+      throw new \Exception($soapError->getMessage(), $soapError->getCode());
     }
 
     return $response->getResultat();
   }
 
+  /**
+   *
+   */
   private function getAzureKeyVaultCertificateLocator(
     string $tenantId,
     string $applicationId,
@@ -188,13 +198,16 @@ class PrintServiceConsumer {
     );
   }
 
+  /**
+   *
+   */
   public function afsendDigitalPostPerson(
-    string $kanalValg = null,
-    string $prioritet = null,
-    string $cprNummerIdentifikator = null,
-    string $filFormatNavn = null,
-    string $meddelelseIndholdData = null,
-    string $titelTekst = null
+    string $kanalValg = NULL,
+    string $prioritet = NULL,
+    string $cprNummerIdentifikator = NULL,
+    string $filFormatNavn = NULL,
+    string $meddelelseIndholdData = NULL,
+    string $titelTekst = NULL
   ): bool {
 
     if (!$this->acquireLock()) {
@@ -213,18 +226,18 @@ class PrintServiceConsumer {
     $forsendelsesModtager = new ForsendelseModtagerType($slutBrugerIdentitetType);
 
     $dokumentParametre = new DokumentParametreType($titelTekst);
-    $digitalPostParametre = new DigitalPostParametreType(null, $this->config->get('digital_post_materiale_id'));
+    $digitalPostParametre = new DigitalPostParametreType(NULL, $this->config->get('digital_post_materiale_id'));
 
     $forsendelse = new ForsendelseIType(
       $this->generateAfsendelseIdentifikator(),
-      null,
+      NULL,
       $forsendelsesModtager,
       $filFormatNavn,
       $meddelelseIndholdData,
-      null,
+      NULL,
       $dokumentParametre,
-      null,
-      null,
+      NULL,
+      NULL,
       $digitalPostParametre
     );
 
@@ -247,21 +260,24 @@ class PrintServiceConsumer {
       AbstractSoapClientBase::WSDL_LOCATION => $this->config->get('service_endpoint'),
     ]);
 
-
     $response = $client->afsendBrev($request);
 
     $this->releaseLock();
 
-    if (false === $response) {
+    if (FALSE === $response) {
       $lastError = $client->getLastError();
-      /* @var $soapError SoapFault */
+      /** @var SoapFault $soapError */
       $soapError = $lastError['Drupal\os2forms_digital_post\Client\ServiceType\Afsend::afsendBrev'];
-      throw new \Exception($soapError->getMessage(), $soapError->getCode()); // Should maybe log this instead!
+      // Should maybe log this instead!
+      throw new \Exception($soapError->getMessage(), $soapError->getCode());
     }
 
     return $response->getResultat();
   }
 
+  /**
+   *
+   */
   protected function generateAfsendelseIdentifikator(): string {
 
     $stateKey = 'os2forms_digital_post_last_letter_counter';
@@ -276,19 +292,28 @@ class PrintServiceConsumer {
 
     return $this->config->get('digital_post_system_id')
       . $this->config->get('digital_post_afsender_system')
-      . $nextLetterNumber
-    ;
+      . $nextLetterNumber;
   }
 
+  /**
+   *
+   */
   protected function acquireLock(): bool {
     return $this->lock->acquire($this->lockName);
   }
 
+  /**
+   *
+   */
   protected function releaseLock() {
     $this->lock->release($this->lockName);
   }
 
+  /**
+   *
+   */
   protected function waitLock(): bool {
     return $this->lock->wait($this->lockName);
   }
+
 }

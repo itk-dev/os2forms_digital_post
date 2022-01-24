@@ -16,7 +16,7 @@ class CreatePdf extends DrushCommands {
   /**
    * The os2forms_digital_post template manager.
    *
-   * @var TemplateManager
+   * @var \Drupal\os2forms_digital_post\Manager\TemplateManager
    */
   protected TemplateManager $templateManager;
 
@@ -27,6 +27,9 @@ class CreatePdf extends DrushCommands {
    */
   protected $entityTypeManager;
 
+  /**
+   *
+   */
   public function __construct(TemplateManager $templateManager, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct();
     $this->templateManager = $templateManager;
@@ -91,4 +94,5 @@ class CreatePdf extends DrushCommands {
     file_put_contents($filePath, $pdf);
     $this->output()->writeln(sprintf('Pdf written to %s', $filePath));
   }
+
 }

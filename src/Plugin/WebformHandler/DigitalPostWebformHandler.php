@@ -4,11 +4,7 @@ namespace Drupal\os2forms_digital_post\Plugin\WebformHandler;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
-use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
 use Drupal\os2forms_digital_post\Exception\CprElementNotFoundInSubmissionException;
-use Drupal\os2forms_digital_post\Manager\TemplateManager;
-use Drupal\webform\Annotation\WebformHandler;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\webform\WebformInterface;
 use Drupal\webform\WebformSubmissionInterface;
@@ -27,8 +23,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   submission = \Drupal\webform\Plugin\WebformHandlerInterface::SUBMISSION_REQUIRED,
  * )
  */
-class DigitalPostWebformHandler extends WebformHandlerBase
-{
+class DigitalPostWebformHandler extends WebformHandlerBase {
   /**
    * The token manager.
    *
@@ -44,17 +39,17 @@ class DigitalPostWebformHandler extends WebformHandlerBase
   protected $elementManager;
 
   /**
-   * @var TemplateManager
+   * @var \Drupal\os2forms_digital_post\Manager\TemplateManager
    */
   protected $templateManager;
 
   /**
-   * @var PrintServiceConsumer
+   * @var \Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer
    */
   protected $printServiceConsumer;
 
   /**
-   * @var CprServiceInterface
+   * @var \Drupal\os2forms_cpr_lookup\Service\CprServiceInterface
    */
   protected $cprService;
 
@@ -95,7 +90,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    $this->getLogger()->debug('This was the form: ' . print_r($this->getWebform()->getElementsDecoded(), true));
+    $this->getLogger()->debug('This was the form: ' . print_r($this->getWebform()->getElementsDecoded(), TRUE));
 
     $availableElements = $this->getAvailableElements($this->getWebform()->getElementsDecoded());
 
@@ -104,7 +99,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       '#title' => $this->t('Prevent elements displayed in template'),
       '#options' => $availableElements,
       '#default_value' => $this->configuration['blacklist_elements_for_template'],
-      '#multiple' => true,
+      '#multiple' => TRUE,
       '#size' => 10,
     ];
 
@@ -115,7 +110,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       '#title' => $this->t('Select template'),
       '#options' => $listOfTemplates,
       '#default_value' => $this->configuration['template'],
-      '#required' => true,
+      '#required' => TRUE,
     ];
 
     // The channels available here are required by the
@@ -126,8 +121,10 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       '#type' => 'select',
       '#title' => $this->t('Select channel'),
       '#options' => [
-        'D' => $this->t('Digital Post'), // Only send the letter as Digital Post.
-        'A' => $this->t('Automatisk'), // Serviceplatformen decides if a citizen should have digital or physical mail based on the citizens registration.
+    // Only send the letter as Digital Post.
+        'D' => $this->t('Digital Post'),
+    // Serviceplatformen decides if a citizen should have digital or physical mail based on the citizens registration.
+        'A' => $this->t('Automatisk'),
       ],
       '#default_value' => $this->configuration['channel'],
     ];
@@ -148,7 +145,6 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       '#default_value' => $this->configuration['cpr_element'],
       '#options' => $availableElements,
     ];
-
 
     $form['document_title'] = [
       '#type' => 'textfield',
@@ -173,6 +169,9 @@ class DigitalPostWebformHandler extends WebformHandlerBase
     return $this->setSettingsParents($form);
   }
 
+  /**
+   *
+   */
   private function getAvailableElements(array $elements): array {
     $availableElements = [];
 
@@ -248,9 +247,9 @@ class DigitalPostWebformHandler extends WebformHandlerBase
    * {@inheritdoc}
    */
   public function confirmForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission) {
-//    $message = $this->configuration['message'];
-//    $message = $this->replaceTokens($message, $this->getWebformSubmission());
-//    $this->messenger()->addStatus(Markup::create(Xss::filter($message)), FALSE);
+    // $message = $this->configuration['message'];
+    //    $message = $this->replaceTokens($message, $this->getWebformSubmission());
+    //    $this->messenger()->addStatus(Markup::create(Xss::filter($message)), FALSE);
     $this->debug(__FUNCTION__);
   }
 
@@ -335,7 +334,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase
     // when sending digital port. Therefore we append it to “floor” instead.
     $floor = $cprSearchResult->getFloor();
     if (!empty($cprSearchResult->getSide())) {
-      $floor .= ' '.$cprSearchResult->getSide();
+      $floor .= ' ' . $cprSearchResult->getSide();
     }
 
     $recipient = [
@@ -343,7 +342,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       'streetName' => $cprSearchResult->getStreetName(),
       'streetNumber' => $cprSearchResult->getHouseNumber(),
       'floor' => $floor,
-      'side' => null,
+      'side' => NULL,
       'postalCode' => $cprSearchResult->getPostalCode(),
       'city' => $cprSearchResult->getCity(),
     ];
@@ -353,12 +352,12 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       'recipient' => $recipient,
     ];
 
-    if (true === $this->configuration['debug']) {
-      $this->templateManager->renderPdf($this->configuration['template'], $context, true);
+    if (TRUE === $this->configuration['debug']) {
+      $this->templateManager->renderPdf($this->configuration['template'], $context, TRUE);
       return;
     }
 
-    $result = false;
+    $result = FALSE;
 
     switch ($this->configuration['channel']) {
       case 'A':
@@ -367,21 +366,22 @@ class DigitalPostWebformHandler extends WebformHandlerBase
           $this->configuration['priority'],
           $submissionData[$this->configuration['cpr_element']],
           $cprSearchResult->getName(),
-          null,
+          NULL,
           $cprSearchResult->getStreetName(),
           $cprSearchResult->getHouseNumber(),
           $floor,
-          null,
-          null,
+          NULL,
+          NULL,
           $cprSearchResult->getPostalCode(),
-          null,
-          null,
+          NULL,
+          NULL,
           'DK',
           'PDF',
           $this->templateManager->renderPdf($this->configuration['template'], $context),
           $this->configuration['document_title']
         );
         break;
+
       case 'D':
         $result = $this->printServiceConsumer->afsendDigitalPostPerson(
           $this->configuration['channel'],
@@ -394,7 +394,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase
         break;
     }
 
-    if (false === $result) {
+    if (FALSE === $result) {
       // Throw an error?
     }
   }
@@ -467,4 +467,5 @@ class DigitalPostWebformHandler extends WebformHandlerBase
       $this->messenger()->addWarning($this->t('Invoked @id: @class_name:@method_name @context1', $t_args), TRUE);
     }
   }
+
 }
