@@ -32,11 +32,11 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
   protected $tokenManager;
 
   /**
-   * The webform element plugin manager.
+   * The webform helper.
    *
-   * @var \Drupal\webform\Plugin\WebformElementManagerInterface
+   * @var \Drupal\os2forms_digital_post\WebformHelper
    */
-  protected $elementManager;
+  protected $webformHelper;
 
   /**
    * The template manager.
@@ -71,8 +71,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
     $instance->entityTypeManager = $container->get('entity_type.manager');
     $instance->conditionsValidator = $container->get('webform_submission.conditions_validator');
     $instance->tokenManager = $container->get('webform.token_manager');
-
-    $instance->elementManager = $container->get('plugin.manager.webform.element');
+    $instance->webformHelper = $container->get('os2forms_digital_post.webform_helper');
     $instance->templateManager = $container->get('os2forms_digital_post.template_manager');
     $instance->printServiceConsumer = $container->get('os2forms_digital_post.print_service_consumer');
     $instance->cprService = $container->get('os2forms_cpr_lookup.service');
@@ -305,23 +304,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
   public function postSave(WebformSubmissionInterface $webform_submission, $update = TRUE) {
     $this->debug(__FUNCTION__, $update ? 'update' : 'insert');
 
-    $elements = [];
-    $blacklistedElements = $this->configuration['blacklist_elements_for_template'];
     $submissionData = $webform_submission->getData();
-    foreach ($submissionData as $key => $value) {
-
-      if (array_key_exists($key, $blacklistedElements)) {
-        continue;
-      }
-
-      $element = $this->webform->getElement($key);
-
-      $elements[] = [
-        'label' => $this->webform->label(),
-        'name' => $element['#title'],
-        'value' => $element['#return_value'] ?? $value,
-      ];
-    }
 
     if (!array_key_exists($this->configuration['cpr_element'], $submissionData)) {
       $this->getLogger()->error(
@@ -334,27 +317,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
     /** @var \Drupal\os2forms_cpr_lookup\CPR\CprServiceResult $cprSearchResult */
     $cprSearchResult = $this->cprService->search($submissionData[$this->configuration['cpr_element']]);
 
-    // We cannot use “side” (from address lookup via cpr) as “suiteIdentifier”
-    // when sending digital port. Therefore we append it to “floor” instead.
-    $floor = $cprSearchResult->getFloor();
-    if (!empty($cprSearchResult->getSide())) {
-      $floor .= ' ' . $cprSearchResult->getSide();
-    }
-
-    $recipient = [
-      'name' => $cprSearchResult->getName(),
-      'streetName' => $cprSearchResult->getStreetName(),
-      'streetNumber' => $cprSearchResult->getHouseNumber(),
-      'floor' => $floor,
-      'side' => NULL,
-      'postalCode' => $cprSearchResult->getPostalCode(),
-      'city' => $cprSearchResult->getCity(),
-    ];
-
-    $context = [
-      'elements' => $elements,
-      'recipient' => $recipient,
-    ];
+    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprSearchResult, $this->configuration);
 
     if (TRUE === $this->configuration['debug']) {
       $this->templateManager->renderPdf($this->configuration['template'], $context, TRUE);
