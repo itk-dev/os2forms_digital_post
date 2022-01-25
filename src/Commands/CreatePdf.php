@@ -16,7 +16,7 @@ class CreatePdf extends DrushCommands {
   /**
    * The os2forms_digital_post template manager.
    *
-   * @var TemplateManager
+   * @var \Drupal\os2forms_digital_post\Manager\TemplateManager
    */
   protected TemplateManager $templateManager;
 
@@ -27,6 +27,9 @@ class CreatePdf extends DrushCommands {
    */
   protected $entityTypeManager;
 
+  /**
+   * Constructor.
+   */
   public function __construct(TemplateManager $templateManager, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct();
     $this->templateManager = $templateManager;
@@ -49,7 +52,11 @@ class CreatePdf extends DrushCommands {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  public function create($template, $options = ['submission_id' => 0, 'file_location' => '', 'file_name' => 'test.pdf']) {
+  public function create($template, array $options = [
+    'submission_id' => 0,
+    'file_location' => '',
+    'file_name' => 'test.pdf',
+  ]) {
     $elements[] = [];
     $webformLabel = '';
     $webform_submission = $this->entityTypeManager->getStorage('webform_submission')->load($options['submission_id']);
@@ -91,4 +98,5 @@ class CreatePdf extends DrushCommands {
     file_put_contents($filePath, $pdf);
     $this->output()->writeln(sprintf('Pdf written to %s', $filePath));
   }
+
 }
