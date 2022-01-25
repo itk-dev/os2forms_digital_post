@@ -4,6 +4,8 @@ namespace Drupal\os2forms_digital_post\Helper;
 
 use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
 use Drupal\webform\WebformSubmissionInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Render\Renderer;
 
 /**
  * Webform helper.
@@ -13,24 +15,11 @@ final class WebformHelper {
   /**
    * Get template context.
    */
-  public function getTemplateContext(WebformSubmissionInterface $webformSubmission, CprServiceResult $cprServiceResult, array $configuration = []) {
-
-    $elements = [];
-    $blacklistedElements = $configuration['blacklist_elements_for_template'] ?? [];
-    $submissionData = $webformSubmission->getData();
+  public function getTemplateContext(WebformSubmissionInterface $webformSubmission, CprServiceResult $cprServiceResult, EntityTypeManagerInterface $entity_type_manager, Renderer $renderer, array $configuration = []) {
     $webform = $webformSubmission->getWebform();
-    foreach ($submissionData as $key => $value) {
-      if (array_key_exists($key, $blacklistedElements)) {
-        continue;
-      }
-
-      $element = $webform->getElement($key);
-
-      $elements[] = [
-        'name' => $element['#title'],
-        'value' => $element['#return_value'] ?? $value,
-      ];
-    }
+    $view_builder = $entity_type_manager->getViewBuilder('webform_submission');
+    $pre_render = $view_builder->view($webformSubmission, 'HTML');
+    $webformSubmissionRendered = $renderer->renderPlain($pre_render);
 
     // We cannot use “side” (from address lookup via cpr) as “suiteIdentifier”
     // when sending digital port. Therefore we append it to “floor” instead.
@@ -51,8 +40,8 @@ final class WebformHelper {
 
     return [
       'label' => $webform->label(),
-      'elements' => $elements,
       'recipient' => $recipient,
+      'submission' => $webformSubmissionRendered
     ];
   }
 

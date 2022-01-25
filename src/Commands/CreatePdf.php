@@ -3,6 +3,7 @@
 namespace Drupal\os2forms_digital_post\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Render\Renderer;
 use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
 use Drush\Commands\DrushCommands;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
@@ -37,13 +38,21 @@ class CreatePdf extends DrushCommands {
   protected $entityTypeManager;
 
   /**
+   * The drupal renderer.
+   *
+   * @var Drupal\Core\Render\Renderer
+   */
+  protected $renderer;
+
+  /**
    * Constructor.
    */
-  public function __construct(WebformHelper $webformHelper, TemplateManager $templateManager, EntityTypeManagerInterface $entity_type_manager) {
+  public function __construct(WebformHelper $webformHelper, TemplateManager $templateManager, EntityTypeManagerInterface $entity_type_manager, Renderer $renderer) {
     parent::__construct();
     $this->webformHelper = $webformHelper;
     $this->templateManager = $templateManager;
     $this->entityTypeManager = $entity_type_manager;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -67,7 +76,6 @@ class CreatePdf extends DrushCommands {
     'file_location' => '',
     'file_name' => 'test.pdf',
   ]) {
-    $elements[] = [];
     $webform_submission = $this->entityTypeManager->getStorage('webform_submission')->load($options['submission_id']);
 
     if (!$webform_submission) {
@@ -94,7 +102,7 @@ class CreatePdf extends DrushCommands {
       ],
     ])));
 
-    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprServiceResult, []);
+    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprServiceResult, $this->entityTypeManager, $this->renderer, []);
 
     $pdf = $this->templateManager->renderPdf($template, $context);
     $filePath = dirname(DRUPAL_ROOT) . $options['file_location'] . '/' . $options['file_name'];
