@@ -3,7 +3,6 @@
 namespace Drupal\os2forms_digital_post\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Render\Renderer;
 use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
 use Drush\Commands\DrushCommands;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
