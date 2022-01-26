@@ -38,21 +38,13 @@ class CreatePdf extends DrushCommands {
   protected $entityTypeManager;
 
   /**
-   * The drupal renderer.
-   *
-   * @var Drupal\Core\Render\Renderer
-   */
-  protected $renderer;
-
-  /**
    * Constructor.
    */
-  public function __construct(WebformHelper $webformHelper, TemplateManager $templateManager, EntityTypeManagerInterface $entity_type_manager, Renderer $renderer) {
+  public function __construct(WebformHelper $webformHelper, TemplateManager $templateManager, EntityTypeManagerInterface $entity_type_manager) {
     parent::__construct();
     $this->webformHelper = $webformHelper;
     $this->templateManager = $templateManager;
     $this->entityTypeManager = $entity_type_manager;
-    $this->renderer = $renderer;
   }
 
   /**
@@ -102,7 +94,7 @@ class CreatePdf extends DrushCommands {
       ],
     ])));
 
-    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprServiceResult, $this->entityTypeManager, $this->renderer, []);
+    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprServiceResult, []);
 
     $pdf = $this->templateManager->renderPdf($template, $context);
     $filePath = dirname(DRUPAL_ROOT) . $options['file_location'] . '/' . $options['file_name'];

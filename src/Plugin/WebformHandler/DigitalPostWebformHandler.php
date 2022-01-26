@@ -317,7 +317,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
     /** @var \Drupal\os2forms_cpr_lookup\CPR\CprServiceResult $cprSearchResult */
     $cprSearchResult = $this->cprService->search($submissionData[$this->configuration['cpr_element']]);
 
-    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprSearchResult, $this->entityTypeManager, $this->renderer, $this->configuration);
+    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprSearchResult, $this->configuration);
 
     if (TRUE === $this->configuration['debug']) {
       $this->templateManager->renderPdf($this->configuration['template'], $context, TRUE);

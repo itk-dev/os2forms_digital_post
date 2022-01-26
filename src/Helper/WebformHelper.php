@@ -13,13 +13,36 @@ use Drupal\Core\Render\Renderer;
 final class WebformHelper {
 
   /**
+   * The entity type manager.
+   *
+   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   */
+  protected $entityTypeManager;
+
+  /**
+   * The drupal renderer.
+   *
+   * @var Drupal\Core\Render\Renderer
+   */
+  protected $renderer;
+
+  /**
+   * Constructor.
+   */
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, Renderer $renderer) {
+    $this->entityTypeManager = $entity_type_manager;
+    $this->renderer = $renderer;
+  }
+
+  /**
    * Get template context.
    */
-  public function getTemplateContext(WebformSubmissionInterface $webformSubmission, CprServiceResult $cprServiceResult, EntityTypeManagerInterface $entity_type_manager, Renderer $renderer, array $configuration = []) {
+  public function getTemplateContext(WebformSubmissionInterface $webformSubmission, CprServiceResult $cprServiceResult, array $configuration = []) {
     $webform = $webformSubmission->getWebform();
-    $view_builder = $entity_type_manager->getViewBuilder('webform_submission');
+
+    $view_builder = $this->entityTypeManager->getViewBuilder('webform_submission');
     $pre_render = $view_builder->view($webformSubmission, 'HTML');
-    $webformSubmissionRendered = $renderer->renderPlain($pre_render);
+    $webformSubmissionRendered = $this->renderer->renderPlain($pre_render);
 
     // We cannot use “side” (from address lookup via cpr) as “suiteIdentifier”
     // when sending digital port. Therefore we append it to “floor” instead.
