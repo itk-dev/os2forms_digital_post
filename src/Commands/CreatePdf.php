@@ -67,7 +67,6 @@ class CreatePdf extends DrushCommands {
     'file_location' => '',
     'file_name' => 'test.pdf',
   ]) {
-    $elements[] = [];
     $webform_submission = $this->entityTypeManager->getStorage('webform_submission')->load($options['submission_id']);
 
     if (!$webform_submission) {
