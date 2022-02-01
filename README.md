@@ -1,6 +1,7 @@
 # OS2Forms Digital Post
 
 Send Digital Post to danish citizens from a webform.
+This module use the [SF1600](https://digitaliseringskataloget.dk/integration/sf1600) service from Serviceplatformen. Information and documentation can be obtained by following that link.
 
 ## Installation
 
