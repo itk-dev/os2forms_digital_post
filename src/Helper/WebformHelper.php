@@ -125,14 +125,7 @@ final class WebformHelper {
 
     /** @var \Drupal\os2forms_cpr_lookup\CPR\CprServiceResult $cprSearchResult */
     $cprSearchResult = $this->cprService->search($submissionData[$handlerConfiguration['cpr_element']]);
-
     $context = $this->getTemplateContext($webform_submission, $cprSearchResult, $handlerConfiguration);
-
-    if (TRUE === $handlerConfiguration['debug']) {
-      $this->templateManager->renderPdf($handlerConfiguration['template'], $context, TRUE);
-      return;
-    }
-
     $result = FALSE;
 
     switch ($handlerConfiguration['channel']) {

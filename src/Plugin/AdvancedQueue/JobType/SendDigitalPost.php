@@ -10,7 +10,7 @@ use Drupal\os2forms_digital_post\Helper\WebformHelper;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Archive document job.
+ * Send digital post.
  *
  * @AdvancedQueueJobType(
  *   id = "Drupal\os2forms_digital_post\Plugin\AdvancedQueue\JobType\SendDigitalPost",
@@ -19,7 +19,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class SendDigitalPost extends JobTypeBase implements ContainerFactoryPluginInterface {
   /**
-   * The archiving helper.
+   * The webform helper.
    *
    * @var \Drupal\os2forms_digital_post\Helper\WebformHelper
    */
@@ -51,7 +51,7 @@ class SendDigitalPost extends JobTypeBase implements ContainerFactoryPluginInter
   }
 
   /**
-   * Processes the ArchiveDocument job.
+   * Processes the send digital post job.
    */
   public function process(Job $job): JobResult {
     $payload = $job->getPayload();
