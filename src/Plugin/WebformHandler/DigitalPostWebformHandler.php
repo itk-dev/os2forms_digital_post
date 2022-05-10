@@ -2,9 +2,11 @@
 
 namespace Drupal\os2forms_digital_post\Plugin\WebformHandler;
 
+use Drupal\advancedqueue\Job;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Drupal\os2forms_digital_post\Exception\CprElementNotFoundInSubmissionException;
+use Drupal\os2forms_digital_post\Plugin\AdvancedQueue\JobType\SendDigitalPost;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\webform\WebformInterface;
 use Drupal\webform\WebformSubmissionInterface;
@@ -302,68 +304,14 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
    * {@inheritdoc}
    */
   public function postSave(WebformSubmissionInterface $webform_submission, $update = TRUE) {
-    $this->debug(__FUNCTION__, $update ? 'update' : 'insert');
-
-    $submissionData = $webform_submission->getData();
-
-    if (!array_key_exists($this->configuration['cpr_element'], $submissionData)) {
-      $this->getLogger()->error(
-        'The chosen CPR element not found in submission!'
-      );
-
-      throw new CprElementNotFoundInSubmissionException();
-    }
-
-    /** @var \Drupal\os2forms_cpr_lookup\CPR\CprServiceResult $cprSearchResult */
-    $cprSearchResult = $this->cprService->search($submissionData[$this->configuration['cpr_element']]);
-
-    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprSearchResult, $this->configuration);
-
-    if (TRUE === $this->configuration['debug']) {
-      $this->templateManager->renderPdf($this->configuration['template'], $context, TRUE);
-      return;
-    }
-
-    $result = FALSE;
-
-    switch ($this->configuration['channel']) {
-      case 'A':
-        $result = $this->printServiceConsumer->afsendBrevPerson(
-          $this->configuration['channel'],
-          $this->configuration['priority'],
-          $submissionData[$this->configuration['cpr_element']],
-          $cprSearchResult->getName(),
-          NULL,
-          $cprSearchResult->getStreetName(),
-          $cprSearchResult->getHouseNumber(),
-          $floor,
-          NULL,
-          NULL,
-          $cprSearchResult->getPostalCode(),
-          NULL,
-          NULL,
-          'DK',
-          'PDF',
-          $this->templateManager->renderPdf($this->configuration['template'], $context),
-          $this->configuration['document_title']
-        );
-        break;
-
-      case 'D':
-        $result = $this->printServiceConsumer->afsendDigitalPostPerson(
-          $this->configuration['channel'],
-          $this->configuration['priority'],
-          $submissionData[$this->configuration['cpr_element']],
-          'PDF',
-          $this->templateManager->renderPdf($this->configuration['template'], $context),
-          $this->configuration['document_title']
-        );
-        break;
-    }
-
-    if (FALSE === $result) {
-      // Throw an error?
-    }
+    $queueStorage = $this->entityTypeManager->getStorage('advancedqueue_queue');
+    /** @var \Drupal\advancedqueue\Entity\Queue $queue */
+    $queue = $queueStorage->load('send_digital_post');
+    $job = Job::create(SendDigitalPost::class, [
+      'submissionId' => $webform_submission->id(),
+      'handlerConfiguration' => $this->configuration,
+    ]);
+    $queue->enqueueJob($job);
   }
 
   /**
