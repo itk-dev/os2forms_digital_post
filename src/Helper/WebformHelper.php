@@ -2,8 +2,10 @@
 
 namespace Drupal\os2forms_digital_post\Helper;
 
+use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
 use Drupal\os2forms_digital_post\Exception\CprElementNotFoundInSubmissionException;
+use Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Render\Renderer;
@@ -52,14 +54,22 @@ final class WebformHelper {
   protected $templateManager;
 
   /**
+   * The logger.
+   *
+   * @var \Drupal\Core\Logger\LoggerChannelInterface
+   */
+  protected $logger;
+
+  /**
    * Constructor.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Renderer $renderer, CprServiceInterface $cprService, PrintServiceConsumer $printServiceConsumer, TemplateManager $templateManager) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, Renderer $renderer, CprServiceInterface $cprService, PrintServiceConsumer $printServiceConsumer, TemplateManager $templateManager, LoggerChannelFactoryInterface $loggerChannelFactory) {
     $this->entityTypeManager = $entity_type_manager;
     $this->renderer = $renderer;
     $this->cprService = $cprService;
     $this->printServiceConsumer = $printServiceConsumer;
     $this->templateManager = $templateManager;
+    $this->logger = $loggerChannelFactory->get('os2forms_digital_post');
   }
 
   /**
@@ -112,11 +122,19 @@ final class WebformHelper {
   public function sendDigitalPost(string $submissionId, array $handlerConfiguration) {
     /** @var \Drupal\webform\Entity\WebformSubmission $submission */
     $webform_submission = $this->getSubmission($submissionId);
+    if (empty($webform_submission)) {
+      $this->logger->error(
+        'Cannot load submission @submissionId',
+        ['@submissionId' => $submissionId]
+      );
+
+      throw new SubmissionNotFoundException(sprintf('Submission %s not found', $submissionId));
+    }
 
     $submissionData = $webform_submission->getData();
 
     if (!array_key_exists($handlerConfiguration['cpr_element'], $submissionData)) {
-      $this->getLogger()->error(
+      $this->logger->error(
         'The chosen CPR element not found in submission!'
       );
 

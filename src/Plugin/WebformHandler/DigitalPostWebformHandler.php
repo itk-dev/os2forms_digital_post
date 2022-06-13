@@ -308,6 +308,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
     /** @var \Drupal\advancedqueue\Entity\Queue $queue */
     $queue = $queueStorage->load('send_digital_post');
     $job = Job::create(SendDigitalPost::class, [
+      'formId' => $webform_submission->getWebform()->id(),
       'submissionId' => $webform_submission->id(),
       'handlerConfiguration' => $this->configuration,
     ]);
