@@ -5,7 +5,6 @@ namespace Drupal\os2forms_digital_post\Plugin\WebformHandler;
 use Drupal\advancedqueue\Job;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
-use Drupal\os2forms_digital_post\Exception\CprElementNotFoundInSubmissionException;
 use Drupal\os2forms_digital_post\Plugin\AdvancedQueue\JobType\SendDigitalPost;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\webform\WebformInterface;

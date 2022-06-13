@@ -67,4 +67,3 @@ class SendDigitalPost extends JobTypeBase implements ContainerFactoryPluginInter
   }
 
 }
-

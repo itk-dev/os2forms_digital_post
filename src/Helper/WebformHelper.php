@@ -102,7 +102,7 @@ final class WebformHelper {
     return [
       'label' => $webform->label(),
       'recipient' => $recipient,
-      'submission' => $webformSubmissionRendered
+      'submission' => $webformSubmissionRendered,
     ];
   }
 
@@ -114,7 +114,8 @@ final class WebformHelper {
    * @param array $handlerConfiguration
    *   Handler config.
    *
-   * @throws CprElementNotFoundInSubmissionException
+   * @throws \Drupal\os2forms_digital_post\Exception\CprElementNotFoundInSubmissionException
+   * @throws \Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    * @throws \ItkDev\Serviceplatformen\Service\Exception\ServiceException
@@ -196,4 +197,5 @@ final class WebformHelper {
     $storage = $this->entityTypeManager->getStorage('webform_submission');
     return $storage->load($submissionId);
   }
+
 }
