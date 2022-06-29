@@ -1,5 +1,5 @@
 {
-    "name": "itk-dev/os2forms-digital-post",
+    "name": "itk-dev/os2forms_digital_post",
     "description": "Provides integration to Print service provided by Serviceplatformen.",
     "type": "drupal-module",
     "license": "MIT",
@@ -9,13 +9,66 @@
             "email": "lats@aarhus.dk"
         }
     ],
+    "repositories": [
+        {
+            "//": "https://git.drupalcode.org/issue/webform_embed-3149360/-/tree/3149360-automated-drupal-9",
+            "type": "package",
+            "package": {
+                "name": "drupal/webform_embed",
+                "//": "@see https://github.com/OS2Forms/os2forms/blob/master/composer.json#L27",
+                "version": "1.x-dev",
+                "type": "drupal-module",
+                "source": {
+                    "url": "https://git.drupalcode.org/issue/webform_embed-3149360.git",
+                    "type": "git",
+                    "reference": "3149360-automated-drupal-9"
+                }
+            }
+        },
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
         "ext-soap": "*",
-        "itk-dev/serviceplatformen": "^1.0",
+        "itk-dev/serviceplatformen": "^1.1",
         "php-http/guzzle6-adapter": "^2.0.1",
         "http-interop/http-factory-guzzle": "^1.0.0",
-        "symfony/property-access": "^4.4"
+        "symfony/property-access": "^4.4",
+        "wsdltophp/packagebase": "^5.0",
+        "dompdf/dompdf": "~0.8.0",
+        "os2forms/os2forms": "^3.0",
+        "itk-dev/os2forms_cpr_lookup": "^1.6"
+    },
+    "autoload": {
+        "Drupal\\os2forms_digital_post\\": "src/"
+    },
+    "require-dev": {
+        "wsdltophp/packagegenerator": "^4.0",
+        "drupal/coder": "^8.3",
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1"
+    },
+    "scripts": {
+        "coding-standards-check/phpcs": [
+            "phpcs --standard=phpcs.xml.dist"
+        ],
+        "coding-standards-check": [
+            "@coding-standards-check/phpcs"
+        ],
+        "coding-standards-apply/phpcs": [
+            "phpcbf --standard=phpcs.xml.dist"
+        ],
+        "coding-standards-apply": [
+            "@coding-standards-apply/phpcs"
+        ]
+    },
+    "config": {
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": true,
+            "vaimo/composer-patches": true
+        }
     }
 }
