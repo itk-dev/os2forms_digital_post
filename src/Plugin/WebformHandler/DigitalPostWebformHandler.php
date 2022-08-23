@@ -26,6 +26,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 class DigitalPostWebformHandler extends WebformHandlerBase {
   /**
+   * Maximum length of title on digital post document.
+   *
+   * It's not obvious, i.e. clearly documented, what the maximum length actually
+   * is, but it's less than 34.
+   */
+  private const DOCUMENT_TITLE_MAX_LENGTH = 32;
+
+  /**
    * The token manager.
    *
    * @var \Drupal\webform\WebformTokenManagerInterface
@@ -158,6 +166,8 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
       '#title' => $this->t('Title of document'),
       '#required' => TRUE,
       '#default_value' => $this->configuration['document_title'],
+      '#maxlength' => self::DOCUMENT_TITLE_MAX_LENGTH,
+      '#description' => $this->t('Note that the document title can contain at most @max_length characters.', ['@max_length' => self::DOCUMENT_TITLE_MAX_LENGTH]),
     ];
 
     // Development.
