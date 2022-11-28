@@ -1,0 +1,7 @@
+os2forms_digital_post.sf1601.PostStatusBeskedModtag:
+  path: '/os2forms_digital_post/PostStatusBeskedModtag'
+  defaults:
+    _controller: '\Drupal\os2forms_digital_post\Controller\SF1601Controller::postStatusBeskedModtag'
+  requirements:
+    # Access check performed in controller.
+    _access: 'TRUE'
