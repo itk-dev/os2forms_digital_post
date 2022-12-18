@@ -1,3 +1,11 @@
+os2forms_digital_post.admin.settings:
+  path: '/admin/os2forms_digital_post/settings'
+  defaults:
+    _form: '\Drupal\os2forms_digital_post\Form\SettingsForm'
+    _title: 'Digital post settings'
+  requirements:
+    _permission: 'administer site configuration'
+
 os2forms_digital_post.sf1601.PostStatusBeskedModtag:
   path: '/os2forms_digital_post/PostStatusBeskedModtag'
   defaults:

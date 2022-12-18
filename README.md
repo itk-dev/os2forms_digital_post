@@ -41,6 +41,12 @@ Enable it with drush:
 drush pm:enable os2forms_digital_post
 ```
 
+## Configuration
+
+Go to `/admin/os2forms_digital_post/settings` to set up global settings for digital post.
+
+--------------------------------------------------------------------------------
+
 Add the following configuration:
 
 ```php

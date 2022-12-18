@@ -4,3 +4,9 @@ services:
     arguments: ['@os2forms_digital_post.webform_helper', '@os2forms_digital_post.template_manager', '@entity_type.manager']
     tags:
       - { name: drush.command }
+
+  Drupal\os2forms_digital_post\Commands\CommandsSF1601:
+      arguments:
+        - '@Drupal\os2forms_digital_post\Helper\WebformHelperSF1601'
+      tags:
+        - { name: drush.command }

@@ -6,3 +6,5 @@ core: 8.x
 core_version_requirement: ^8 || ^9
 dependencies:
   - 'webform:webform'
+
+configure: os2forms_digital_post.admin.settings
