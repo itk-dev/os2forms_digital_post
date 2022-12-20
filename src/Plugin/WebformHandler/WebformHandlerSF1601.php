@@ -24,6 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 final class WebformHandlerSF1601 extends WebformHandlerBase {
+  public const MEMO_MESSAGE = 'memo_message';
   public const TYPE = 'type';
   public const MESSAGE_TYPE = 'message_type';
   public const SENDER_LABEL = 'sender_label';
@@ -103,7 +104,6 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
    */
   public function defaultConfiguration() {
     return [
-      'message' => 'This is a custom message.',
       'debug' => FALSE,
     ];
   }
@@ -112,9 +112,12 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
    * {@inheritdoc}
    */
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
-    $this->getLogger()->debug('This was the form: ' . print_r($this->getWebform()->getElementsDecoded(), TRUE));
+    $form[self::MEMO_MESSAGE] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Message'),
+    ];
 
-    $form[self::TYPE] = [
+    $form[self::MEMO_MESSAGE][self::TYPE] = [
       '#type' => 'select',
       '#title' => $this->t('Type'),
       '#required' => TRUE,
@@ -123,10 +126,10 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
         SF1601::TYPE_DIGITAL_POST => SF1601::TYPE_DIGITAL_POST,
         SF1601::TYPE_FYSISK_POST => SF1601::TYPE_FYSISK_POST,
       ],
-      '#default_value' => $this->configuration[self::TYPE] ?? SF1601::TYPE_AUTOMATISK_VALG,
+      '#default_value' => $this->configuration[self::MEMO_MESSAGE][self::TYPE] ?? SF1601::TYPE_AUTOMATISK_VALG,
     ];
 
-    $form[self::MESSAGE_TYPE] = [
+    $form[self::MEMO_MESSAGE][self::MESSAGE_TYPE] = [
       '#type' => 'select',
       '#title' => $this->t('Message type'),
       '#required' => TRUE,
@@ -134,40 +137,40 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
         SF1601::MESSAGE_TYPE_DIGITAL_POST => SF1601::MESSAGE_TYPE_DIGITAL_POST,
         SF1601::MESSAGE_TYPE_NEM_SMS => SF1601::MESSAGE_TYPE_NEM_SMS,
       ],
-      '#default_value' => $this->configuration[self::MESSAGE_TYPE] ?? SF1601::MESSAGE_TYPE_DIGITAL_POST,
+      '#default_value' => $this->configuration[self::MEMO_MESSAGE][self::MESSAGE_TYPE] ?? SF1601::MESSAGE_TYPE_DIGITAL_POST,
     ];
 
     $availableElements = $this->getRecipientElements();
-    $form[static::RECIPIENT_ELEMENT] = [
+    $form[self::MEMO_MESSAGE][static::RECIPIENT_ELEMENT] = [
       '#type' => 'select',
       '#title' => $this->t('Element that contains the identifier (CPR or CVR) of the recipient'),
       '#required' => TRUE,
-      '#default_value' => $this->configuration[static::RECIPIENT_ELEMENT] ?? NULL,
+      '#default_value' => $this->configuration[self::MEMO_MESSAGE][static::RECIPIENT_ELEMENT] ?? NULL,
       '#options' => $availableElements,
     ];
 
     $availableElements = $this->getAttachmentElements();
-    $form[static::ATTACHMENT_ELEMENT] = [
+    $form[self::MEMO_MESSAGE][static::ATTACHMENT_ELEMENT] = [
       '#type' => 'select',
       '#title' => $this->t('Element that contains the document to send'),
       '#required' => TRUE,
-      '#default_value' => $this->configuration[static::ATTACHMENT_ELEMENT] ?? NULL,
+      '#default_value' => $this->configuration[self::MEMO_MESSAGE][static::ATTACHMENT_ELEMENT] ?? NULL,
       '#options' => $availableElements,
     ];
 
-    $form[self::SENDER_LABEL] = [
+    $form[self::MEMO_MESSAGE][self::SENDER_LABEL] = [
       '#type' => 'textfield',
       '#title' => $this->t('Sender label'),
       '#required' => TRUE,
-      '#default_value' => $this->configuration[self::SENDER_LABEL] ?? NULL,
+      '#default_value' => $this->configuration[self::MEMO_MESSAGE][self::SENDER_LABEL] ?? NULL,
       '#maxlength' => self::SENDER_LABEL_MAX_LENGTH,
     ];
 
-    $form[self::MESSAGE_HEADER_LABEL] = [
+    $form[self::MEMO_MESSAGE][self::MESSAGE_HEADER_LABEL] = [
       '#type' => 'textfield',
       '#title' => $this->t('Message header label'),
       '#required' => TRUE,
-      '#default_value' => $this->configuration[self::MESSAGE_HEADER_LABEL] ?? NULL,
+      '#default_value' => $this->configuration[self::MEMO_MESSAGE][self::MESSAGE_HEADER_LABEL] ?? NULL,
       '#maxlength' => self::MESSAGE_HEADER_LABEL_MAX_LENGTH,
     ];
 
@@ -231,12 +234,7 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
     parent::submitConfigurationForm($form, $form_state);
 
     foreach ([
-      self::TYPE,
-      self::MESSAGE_TYPE,
-      self::SENDER_LABEL,
-      self::MESSAGE_HEADER_LABEL,
-      self::RECIPIENT_ELEMENT,
-      self::ATTACHMENT_ELEMENT,
+      self::MEMO_MESSAGE,
     ] as $key) {
       $this->configuration[$key] = $form_state->getValue($key);
     }

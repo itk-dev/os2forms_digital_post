@@ -127,7 +127,8 @@ final class WebformHelperSF1601 {
 
     $submissionData = $submissionData + $submission->getData();
 
-    $recipientIdentifierKey = $handlerSettings[WebformHandlerSF1601::RECIPIENT_ELEMENT] ?? NULL;
+    $handlerMessageSettings = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE];
+    $recipientIdentifierKey = $handlerMessageSettings[WebformHandlerSF1601::RECIPIENT_ELEMENT] ?? NULL;
     if (NULL === $recipientIdentifierKey) {
       $message = 'Recipient identifier element (key: %element_key) not found in submission';
       $context = [
@@ -165,8 +166,8 @@ final class WebformHelperSF1601 {
       SettingsForm::SENDER_IDENTIFIER_TYPE => $senderSettings[SettingsForm::SENDER_IDENTIFIER_TYPE],
       SettingsForm::SENDER_IDENTIFIER => $senderSettings[SettingsForm::SENDER_IDENTIFIER],
 
-      WebformHandlerSF1601::SENDER_LABEL => $handlerSettings[WebformHandlerSF1601::SENDER_LABEL],
-      WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
+      WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
+      WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
     $message = $this->buildMessage($submission, $messageOptions, $handlerSettings, $submissionData);
 
@@ -177,7 +178,7 @@ final class WebformHelperSF1601 {
     ];
     $service = new SF1601($options);
     $transactionId = Serializer::createUuid();
-    $type = $handlerSettings[WebformHandlerSF1601::TYPE] ?? SF1601::TYPE_DIGITAL_POST;
+    $type = $handlerMessageSettings[WebformHandlerSF1601::TYPE] ?? SF1601::TYPE_DIGITAL_POST;
     $response = $service->kombiPostAfsend($transactionId, $type, $message);
 
     // DEBUG.
@@ -266,7 +267,7 @@ final class WebformHelperSF1601 {
    */
   public function getMainDocument(WebformSubmissionInterface $submission, array $handlerSettings): array {
     // Lifted from Drupal\webform_attachment\Controller\WebformAttachmentController::download.
-    $element = $handlerSettings[WebformHandlerSF1601::ATTACHMENT_ELEMENT];
+    $element = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE][WebformHandlerSF1601::ATTACHMENT_ELEMENT];
     $element = $submission->getWebform()->getElement($element) ?: [];
     [$type] = explode(':', $element['#type']);
     $instance = $this->elementInfoManager->createInstance($type);
