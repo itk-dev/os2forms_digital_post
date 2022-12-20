@@ -7,6 +7,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\os2forms_digital_post\Plugin\AdvancedQueue\JobType\SendDigitalPostSF1601;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\webform\WebformSubmissionInterface;
+use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -23,16 +24,22 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * )
  */
 final class WebformHandlerSF1601 extends WebformHandlerBase {
-  public const RECIPIENT_ELEMENT_KEY = 'recipient_element';
-  public const ATTACHMENT_ELEMENT_KEY = 'attachment_element';
+  public const TYPE = 'type';
+  public const MESSAGE_TYPE = 'message_type';
+  public const SENDER_LABEL = 'sender_label';
+  public const HEADER_LABEL = 'header_label';
+  public const RECIPIENT_ELEMENT = 'recipient_element';
+  public const ATTACHMENT_ELEMENT = 'attachment_element';
 
   /**
-   * Maximum length of title on digital post document.
-   *
-   * It's not obvious, i.e. clearly documented, what the maximum length actually
-   * is, but it's less than 34.
+   * Maximum length of sender label.
    */
-  private const DOCUMENT_TITLE_MAX_LENGTH = 32;
+  private const SENDER_LABEL_MAX_LENGTH = 64;
+
+  /**
+   * Maximum length of header label.
+   */
+  private const HEADER_LABEL_MAX_LENGTH = 128;
 
   /**
    * The token manager.
@@ -107,57 +114,61 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
     $this->getLogger()->debug('This was the form: ' . print_r($this->getWebform()->getElementsDecoded(), TRUE));
 
-    // The channels available here are required by the
-    // Digital Post service. For more information see the
-    // specification for the PrintService (SF1600) on
-    // Serviceplatformen.
-    $form['channel'] = [
+    $form[self::TYPE] = [
       '#type' => 'select',
-      '#title' => $this->t('Select channel'),
+      '#title' => $this->t('Type'),
+      '#required' => TRUE,
       '#options' => [
-        // Only send the letter as Digital Post.
-        'D' => $this->t('Digital Post'),
-        // Serviceplatformen decides if a citizen should have digital or
-        // physical mail based on the citizens registration.
-        'A' => $this->t('Automatisk'),
+        SF1601::TYPE_AUTOMATISK_VALG => SF1601::TYPE_AUTOMATISK_VALG,
+        SF1601::TYPE_DIGITAL_POST => SF1601::TYPE_DIGITAL_POST,
+        SF1601::TYPE_FYSISK_POST => SF1601::TYPE_FYSISK_POST,
       ],
-      '#default_value' => $this->configuration['channel'],
+      '#default_value' => $this->configuration[self::TYPE] ?? SF1601::TYPE_AUTOMATISK_VALG,
     ];
 
-    $form['priority'] = [
+    $form[self::MESSAGE_TYPE] = [
       '#type' => 'select',
-      '#title' => $this->t('Priority'),
+      '#title' => $this->t('Message type'),
+      '#required' => TRUE,
       '#options' => [
-        'D' => $this->t('Direkte'),
+        SF1601::MESSAGE_TYPE_DIGITAL_POST => SF1601::MESSAGE_TYPE_DIGITAL_POST,
+        SF1601::MESSAGE_TYPE_NEM_SMS => SF1601::MESSAGE_TYPE_NEM_SMS,
       ],
-      '#default_value' => $this->configuration['priority'] ?? NULL,
+      '#default_value' => $this->configuration[self::MESSAGE_TYPE] ?? SF1601::MESSAGE_TYPE_DIGITAL_POST,
     ];
 
     $availableElements = $this->getRecipientElements();
-    $form[static::RECIPIENT_ELEMENT_KEY] = [
+    $form[static::RECIPIENT_ELEMENT] = [
       '#type' => 'select',
       '#title' => $this->t('Element that contains the identifier (CPR or CVR) of the recipient'),
       '#required' => TRUE,
-      '#default_value' => $this->configuration[static::RECIPIENT_ELEMENT_KEY] ?? NULL,
+      '#default_value' => $this->configuration[static::RECIPIENT_ELEMENT] ?? NULL,
       '#options' => $availableElements,
     ];
 
     $availableElements = $this->getAttachmentElements();
-    $form[static::ATTACHMENT_ELEMENT_KEY] = [
+    $form[static::ATTACHMENT_ELEMENT] = [
       '#type' => 'select',
       '#title' => $this->t('Element that contains the document to send'),
       '#required' => TRUE,
-      '#default_value' => $this->configuration[static::ATTACHMENT_ELEMENT_KEY] ?? NULL,
+      '#default_value' => $this->configuration[static::ATTACHMENT_ELEMENT] ?? NULL,
       '#options' => $availableElements,
     ];
 
-    $form['document_title'] = [
+    $form[self::SENDER_LABEL] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Document title'),
+      '#title' => $this->t('Sender label'),
       '#required' => TRUE,
-      '#default_value' => $this->configuration['document_title'] ?? NULL,
-      '#maxlength' => self::DOCUMENT_TITLE_MAX_LENGTH,
-      '#description' => $this->t('Note that the document title can contain at most @max_length characters.', ['@max_length' => self::DOCUMENT_TITLE_MAX_LENGTH]),
+      '#default_value' => $this->configuration[self::SENDER_LABEL] ?? NULL,
+      '#maxlength' => self::SENDER_LABEL_MAX_LENGTH,
+    ];
+
+    $form[self::HEADER_LABEL] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Header label'),
+      '#required' => TRUE,
+      '#default_value' => $this->configuration[self::HEADER_LABEL] ?? NULL,
+      '#maxlength' => self::HEADER_LABEL_MAX_LENGTH,
     ];
 
     // Development.
@@ -218,13 +229,18 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
     parent::submitConfigurationForm($form, $form_state);
-    $this->configuration['channel'] = $form_state->getValue('channel');
-    $this->configuration['priority'] = $form_state->getValue('priority');
-    $this->configuration[static::RECIPIENT_ELEMENT_KEY] = $form_state->getValue(static::RECIPIENT_ELEMENT_KEY);
-    $this->configuration[static::ATTACHMENT_ELEMENT_KEY] = $form_state->getValue(static::ATTACHMENT_ELEMENT_KEY);
-    $this->configuration['document_title'] = $form_state->getValue('document_title');
-    $this->configuration['template'] = $form_state->getValue('template');
-    $this->configuration['blacklist_elements_for_template'] = $form_state->getValue('blacklist_elements_for_template');
+
+    foreach ([
+      self::TYPE,
+      self::MESSAGE_TYPE,
+      self::SENDER_LABEL,
+      self::HEADER_LABEL,
+      self::RECIPIENT_ELEMENT,
+      self::ATTACHMENT_ELEMENT,
+    ] as $key) {
+      $this->configuration[$key] = $form_state->getValue($key);
+    }
+
     $this->configuration['debug'] = (bool) $form_state->getValue('debug');
   }
 

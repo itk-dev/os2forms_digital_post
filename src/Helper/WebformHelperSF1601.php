@@ -109,11 +109,11 @@ final class WebformHelperSF1601 {
 
     $submissionData = $submissionData + $submission->getData();
 
-    $recipientIdentifierKey = $handlerSettings[WebformHandlerSF1601::RECIPIENT_ELEMENT_KEY] ?? NULL;
+    $recipientIdentifierKey = $handlerSettings[WebformHandlerSF1601::RECIPIENT_ELEMENT] ?? NULL;
     if (NULL === $recipientIdentifierKey) {
       $message = 'Recipient identifier element (key: %element_key) not found in submission';
       $context = [
-        '%element_key' => WebformHandlerSF1601::RECIPIENT_ELEMENT_KEY,
+        '%element_key' => WebformHandlerSF1601::RECIPIENT_ELEMENT,
       ];
 
       $this->logger->error($message, $context);
@@ -126,7 +126,7 @@ final class WebformHelperSF1601 {
     if (NULL === $recipientIdentifier) {
       $message = 'Recipient identifier element (key: %element_key) not found in submission';
       $context = [
-        '%element_key' => WebformHandlerSF1601::RECIPIENT_ELEMENT_KEY,
+        '%element_key' => WebformHandlerSF1601::RECIPIENT_ELEMENT,
       ];
 
       $this->logger->error($message, $context);
@@ -153,6 +153,9 @@ final class WebformHelperSF1601 {
 
       'sender-id-type' => $senderSettings['identifier_type'],
       'sender-id' => $senderSettings['identifier'],
+
+      'sender-label' => $handlerSettings['sender_label'],
+      'header-label' => $handlerSettings['header_label'],
     ];
     $message = $this->buildMessage($submission, $messageOptions);
     $response = $service->kombiPostAfsend($transactionId, $type, $message);
@@ -178,9 +181,6 @@ final class WebformHelperSF1601 {
 
     $message = new Message();
 
-    $options['sender-label'] = sprintf('ITK (sender) %s', (new \DateTimeImmutable())->format(\DateTimeImmutable::ATOM));
-    $options['header-label'] = sprintf('ITK %s', (new \DateTimeImmutable())->format(\DateTimeImmutable::ATOM));
-
     $sender = (new Sender())
       ->setIdType($options['sender-id-type'])
       ->setSenderID($options['sender-id'])
@@ -191,8 +191,7 @@ final class WebformHelperSF1601 {
       ->setRecipientID($options['recipient-id']);
 
     $messageHeader = (new MessageHeader())
-      ->setMessageType('Digital post')
-      ->setMessageType('DIGITALPOST')
+      ->setMessageType($options['message-type'] ?? SF1601::MESSAGE_TYPE_DIGITAL_POST)
       ->setMessageUUID($messageUUID)
       ->setMessageID($messageID)
       ->setLabel($options['header-label'])
