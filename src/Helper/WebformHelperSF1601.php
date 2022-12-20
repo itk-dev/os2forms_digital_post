@@ -157,6 +157,7 @@ final class WebformHelperSF1601 {
     $message = $this->buildMessage($submission, $messageOptions, $submissionData);
 
     $options = [
+      'test_mode' => (bool) $this->settings->get('test_mode'),
       'authority_cvr' => $senderSettings[SettingsForm::SENDER_IDENTIFIER],
       'certificate_locator' => $this->certificateLocatorHelper->getCertificateLocator(),
     ];
