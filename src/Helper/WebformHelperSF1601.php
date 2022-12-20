@@ -15,20 +15,11 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
 use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
-use Drupal\os2forms_digital_post\Exception\CertificateLocatorException;
 use Drupal\os2forms_digital_post\Exception\InvalidRecipientIdentifierElementException;
 use Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformSubmissionStorageInterface;
-use GuzzleHttp\Client;
-use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
-use Http\Factory\Guzzle\RequestFactory;
-use ItkDev\AzureKeyVault\Authorisation\VaultToken;
-use ItkDev\AzureKeyVault\KeyVault\VaultSecret;
-use ItkDev\Serviceplatformen\Certificate\AzureKeyVaultCertificateLocator;
-use ItkDev\Serviceplatformen\Certificate\CertificateLocatorInterface;
-use ItkDev\Serviceplatformen\Certificate\FilesystemCertificateLocator;
 use ItkDev\Serviceplatformen\Service\SF1601\Serializer;
 use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
 
@@ -42,6 +33,13 @@ final class WebformHelperSF1601 {
    * @var \Drupal\os2forms_digital_post\SettingsInterface|Settings
    */
   private SettingsInterface $settings;
+
+  /**
+   * The certificate locator helper.
+   *
+   * @var CertificateLocatorHelper
+   */
+  private CertificateLocatorHelper $certificateLocatorHelper;
 
   /**
    * The webform submission storage.
@@ -76,11 +74,13 @@ final class WebformHelperSF1601 {
    */
   public function __construct(
     SettingsInterface $settings,
+    CertificateLocatorHelper $certificateLocatorHelper,
     EntityTypeManagerInterface $entity_type_manager,
     CprServiceInterface $cprService,
     LoggerChannelFactoryInterface $loggerChannelFactory
   ) {
     $this->settings = $settings;
+    $this->certificateLocatorHelper = $certificateLocatorHelper;
     $this->webformSubmissionStorage = $entity_type_manager->getStorage('webform_submission');
     $this->cprService = $cprService;
     $this->logger = $loggerChannelFactory->get('os2forms_digital_post');
@@ -142,7 +142,7 @@ final class WebformHelperSF1601 {
     $senderSettings = $this->settings->get('sender');
     $options = [
       'authority_cvr' => $senderSettings['identifier'],
-      'certificate_locator' => $this->getCertificateLocator(),
+      'certificate_locator' => $this->certificateLocatorHelper->getCertificateLocator(),
     ];
     $service = new SF1601($options);
     $transactionId = Serializer::createUuid();
@@ -235,55 +235,6 @@ final class WebformHelperSF1601 {
     $message->setMessageBody($body);
 
     return $message;
-  }
-
-  /**
-   * Get certificate locator.
-   */
-  private function getCertificateLocator(): CertificateLocatorInterface {
-    $certificateSettings = $this->settings->get('certificate');
-
-    $locatorType = $certificateSettings['locator_type'];
-    $options = $certificateSettings[$locatorType];
-    $options += [
-      'passphrase' => $certificateSettings['passphrase'] ?: '',
-    ];
-
-    if ('azure_key_vault' === $locatorType) {
-      $httpClient = new GuzzleAdapter(new Client());
-      $requestFactory = new RequestFactory();
-
-      $vaultToken = new VaultToken($httpClient, $requestFactory);
-
-      $token = $vaultToken->getToken(
-        $options['tenant_id'],
-        $options['application_id'],
-        $options['client_secret'],
-      );
-
-      $vault = new VaultSecret(
-        $httpClient,
-        $requestFactory,
-        $options['name'],
-        $token->getAccessToken()
-      );
-
-      return new AzureKeyVaultCertificateLocator(
-        $vault,
-        $options['secret'],
-        $options['version'],
-        $options['passphrase'],
-      );
-    }
-    elseif ('path' === $locatorType) {
-      $certificatepath = realpath($options['path']) ?: NULL;
-      if (NULL === $certificatepath) {
-        throw new CertificateLocatorException(sprintf('Invalid certificate path %s', $options['path']));
-      }
-      return new FilesystemCertificateLocator($certificatepath, $options['passphrase']);
-    }
-
-    throw new CertificateLocatorException(sprintf('Invalid certificate locator type: %s', $locatorType));
   }
 
   /**
