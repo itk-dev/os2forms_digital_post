@@ -154,15 +154,15 @@ final class WebformHelperSF1601 {
       WebformHandlerSF1601::SENDER_LABEL => $handlerSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
-    $message = $this->buildMessage($submission, $messageOptions);
+    $message = $this->buildMessage($submission, $messageOptions, $submissionData);
 
     $options = [
-      'authority_cvr' => $senderSettings['identifier'],
+      'authority_cvr' => $senderSettings[SettingsForm::SENDER_IDENTIFIER],
       'certificate_locator' => $this->certificateLocatorHelper->getCertificateLocator(),
     ];
     $service = new SF1601($options);
     $transactionId = Serializer::createUuid();
-    $type = $handlerSettings[WebformHandlerSF1601::MESSAGE_TYPE] ?? SF1601::TYPE_DIGITAL_POST;
+    $type = $handlerSettings[WebformHandlerSF1601::TYPE] ?? SF1601::TYPE_DIGITAL_POST;
     $response = $service->kombiPostAfsend($transactionId, $type, $message);
 
     // @todo What to return?
@@ -181,7 +181,7 @@ final class WebformHelperSF1601 {
   /**
    * Build MEMO message.
    */
-  private function buildMessage(WebformSubmissionInterface $submission, array $options): Message {
+  private function buildMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, array $submissionData = []): Message {
     $messageUUID = Serializer::createUuid();
     $messageID = Serializer::createUuid();
 
@@ -211,8 +211,8 @@ final class WebformHelperSF1601 {
     $body = (new MessageBody())
       ->setCreatedDateTime(new \DateTime());
 
-    $document = $this->getMainDocument($submission);
-    $attachments = $this->getAttachments($submission);
+    $document = $this->getMainDocument($submission, $handlerSettings, $submissionData);
+    $attachments = $this->getAttachments($submission, $handlerSettings, $submissionData);
 
     $mainDocument = (new MainDocument())
       ->setFile([
@@ -245,7 +245,7 @@ final class WebformHelperSF1601 {
   /**
    * Get main document.
    */
-  private function getMainDocument(WebformSubmissionInterface $submission): array {
+  public function getMainDocument(WebformSubmissionInterface $submission, array $handlerSettings, array $submissionData = []): array {
     // @fixme Get content from attachment element.
     $document = [
       'content' => sprintf('Hmm … %s', DRUPAL_ROOT),
@@ -259,7 +259,7 @@ final class WebformHelperSF1601 {
   /**
    * Get attachments.
    */
-  private function getAttachments(WebformSubmissionInterface $submission): array {
+  private function getAttachments(WebformSubmissionInterface $submission, array $handlerSettings, array $submissionData = []): array {
     return [];
   }
 

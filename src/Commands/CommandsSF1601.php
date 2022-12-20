@@ -3,6 +3,7 @@
 namespace Drupal\os2forms_digital_post\Commands;
 
 use Drupal\os2forms_digital_post\Helper\WebformHelperSF1601;
+use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drush\Commands\DrushCommands;
 
 /**
@@ -54,6 +55,48 @@ class CommandsSF1601 extends DrushCommands {
     'attachment-element' => NULL,
     'submission-data' => NULL,
   ]) {
+    [$submission, $handlerSettings, $submissionData] = $this->getData($submissionId, $options);
+
+    $this->helper->sendDigitalPost($submission->id(), $handlerSettings, $submissionData);
+  }
+
+    /**
+   * Send digital post for a submission.
+   *
+   * @param int $submissionId
+   *   The submission id.
+   * @param array $options
+   *   The command options.
+   *
+   * @option string handler-id
+   *   The handler id.
+   * @option array handler-settings
+   *  The handler settings (JSON).
+   * @option string recipient-element
+   *   The recipient element key.
+   * @option string attachment-element
+   *   The attachment element key.
+   * @option array submission-data
+   *   The submission data (overwriting actual submission data).
+   *
+   * @command os2forms_digital_post:digital-post:generate-document
+   * @usage os2forms_digital_post:digital-post:generate-document --help
+   */
+  public function generateDocument(int $submissionId, array $options = [
+    'handler-id' => NULL,
+    'handler-settings' => NULL,
+    'recipient-element' => NULL,
+    'attachment-element' => NULL,
+    'submission-data' => NULL,
+  ]) {
+    [$submission, $handlerSettings, $submissionData] = $this->getData($submissionId, $options);
+
+    $document = $this->helper->getMainDocument($submission, $handlerSettings, $submissionData);
+
+    var_export($document);
+  }
+
+  private function getData(int $submissionId, array $options) {
     $submission = $this->helper->loadSubmission($submissionId);
     if (NULL === $submission) {
       throw new \InvalidArgumentException(sprintf('Cannot load submission %d', $submissionId));
@@ -91,13 +134,13 @@ class CommandsSF1601 extends DrushCommands {
     }
 
     if (isset($options['recipient-element'])) {
-      $handlerSettings['recipient_element'] = $options['recipient-element'];
+      $handlerSettings[WebformHandlerSF1601::RECIPIENT_ELEMENT] = $options['recipient-element'];
     }
     if (isset($options['attachment-element'])) {
-      $handlerSettings['attachment_element'] = $options['attachment-element'];
+      $handlerSettings[WebformHandlerSF1601::ATTACHMENT_ELEMENT] = $options['attachment-element'];
     }
 
-    $this->helper->sendDigitalPost($submission->id(), $handlerSettings, $submissionData);
+    return [$submission, $handlerSettings, $submissionData];
   }
 
   /**
