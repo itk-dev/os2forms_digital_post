@@ -31,6 +31,8 @@ services:
       - "@Drupal\\os2forms_digital_post\\Helper\\CertificateLocatorHelper"
       - "@entity_type.manager"
       - "@os2forms_cpr_lookup.service"
+      - "@plugin.manager.webform.element"
+      - "@plugin.manager.element_info"
       - "@logger.factory"
 
   Drupal\os2forms_digital_post\Helper\SF1461Helper:

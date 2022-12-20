@@ -13,14 +13,17 @@ use DigitalPost\MeMo\Sender;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
+use Drupal\Core\Render\ElementInfoManagerInterface;
 use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
-use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
+use Drupal\os2forms_digital_post\Exception\InvalidAttachmentElementException;
 use Drupal\os2forms_digital_post\Exception\InvalidRecipientIdentifierElementException;
 use Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException;
 use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
+use Drupal\webform\Plugin\WebformElementManagerInterface;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformSubmissionStorageInterface;
+use Drupal\webform_attachment\Element\WebformAttachmentBase;
 use ItkDev\Serviceplatformen\Service\SF1601\Serializer;
 use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
 
@@ -60,11 +63,18 @@ final class WebformHelperSF1601 {
   protected CprServiceInterface $cprService;
 
   /**
-   * The print service consumer.
+   * The webform element plugin manager.
    *
-   * @var \Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer
+   * @var \Drupal\webform\Plugin\WebformElementManagerInterface
    */
-  protected PrintServiceConsumer $printServiceConsumer;
+  protected $webformElementManager;
+
+  /**
+   * Element info.
+   *
+   * @var \Drupal\Core\Render\ElementInfoManagerInterface
+   */
+  protected $elementInfoManager;
 
   /**
    * The logger.
@@ -81,12 +91,16 @@ final class WebformHelperSF1601 {
     CertificateLocatorHelper $certificateLocatorHelper,
     EntityTypeManagerInterface $entity_type_manager,
     CprServiceInterface $cprService,
+    WebformElementManagerInterface $webformElementManager,
+    ElementInfoManagerInterface $elementInfoManager,
     LoggerChannelFactoryInterface $loggerChannelFactory
   ) {
     $this->settings = $settings;
     $this->certificateLocatorHelper = $certificateLocatorHelper;
     $this->webformSubmissionStorage = $entity_type_manager->getStorage('webform_submission');
     $this->cprService = $cprService;
+    $this->webformElementManager = $webformElementManager;
+    $this->elementInfoManager = $elementInfoManager;
     $this->logger = $loggerChannelFactory->get('os2forms_digital_post');
   }
 
@@ -139,9 +153,9 @@ final class WebformHelperSF1601 {
         $message));
     }
 
+    // Validate recipient identifier.
     // @todo Use this for building physical post address.
-    $cprSearchResult = $this->cprService->search($recipientIdentifier);
-    $result = FALSE;
+    $this->cprService->search($recipientIdentifier);
 
     $senderSettings = $this->settings->get('sender');
     $messageOptions = [
@@ -154,7 +168,7 @@ final class WebformHelperSF1601 {
       WebformHandlerSF1601::SENDER_LABEL => $handlerSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
-    $message = $this->buildMessage($submission, $messageOptions, $submissionData);
+    $message = $this->buildMessage($submission, $messageOptions, $handlerSettings, $submissionData);
 
     $options = [
       'test_mode' => (bool) $this->settings->get('test_mode'),
@@ -166,10 +180,12 @@ final class WebformHelperSF1601 {
     $type = $handlerSettings[WebformHandlerSF1601::TYPE] ?? SF1601::TYPE_DIGITAL_POST;
     $response = $service->kombiPostAfsend($transactionId, $type, $message);
 
-    // @todo What to return?
-
+    // DEBUG.
     $meMoMessage = $service->getLastKombiMeMoMessage();
     echo $meMoMessage->ownerDocument->saveXML($meMoMessage);
+    // DEBUG.
+    // @todo What to return?
+    return $response;
   }
 
   /**
@@ -212,8 +228,8 @@ final class WebformHelperSF1601 {
     $body = (new MessageBody())
       ->setCreatedDateTime(new \DateTime());
 
-    $document = $this->getMainDocument($submission, $handlerSettings, $submissionData);
-    $attachments = $this->getAttachments($submission, $handlerSettings, $submissionData);
+    $document = $this->getMainDocument($submission, $handlerSettings);
+    $attachments = $this->getAttachments($submission, $handlerSettings);
 
     $mainDocument = (new MainDocument())
       ->setFile([
@@ -225,9 +241,9 @@ final class WebformHelperSF1601 {
       ]);
     $body->setMainDocument($mainDocument);
 
-    foreach ($attachments as $index => $attachment) {
+    foreach ($attachments as $attachment) {
       $additionalDocument = (new AdditionalDocument())
-        ->setLabel(sprintf('Attachment %d', $index + 1))
+        ->setLabel($attachment['label'] ?? $attachment['filename'])
         ->setFile([
           (new File())
             ->setEncodingFormat($attachment['mime-type'])
@@ -245,22 +261,35 @@ final class WebformHelperSF1601 {
 
   /**
    * Get main document.
+   *
+   * @see WebformAttachmentController::download()
    */
-  public function getMainDocument(WebformSubmissionInterface $submission, array $handlerSettings, array $submissionData = []): array {
-    // @fixme Get content from attachment element.
-    $document = [
-      'content' => sprintf('Hmm … %s', DRUPAL_ROOT),
-      'mime-type' => 'text/plain',
-      'filename' => 'hmm.txt',
-    ];
+  public function getMainDocument(WebformSubmissionInterface $submission, array $handlerSettings): array {
+    // Lifted from Drupal\webform_attachment\Controller\WebformAttachmentController::download.
+    $element = $handlerSettings[WebformHandlerSF1601::ATTACHMENT_ELEMENT];
+    $element = $submission->getWebform()->getElement($element) ?: [];
+    [$type] = explode(':', $element['#type']);
+    $instance = $this->elementInfoManager->createInstance($type);
+    if (!$instance instanceof WebformAttachmentBase) {
+      throw new InvalidAttachmentElementException(sprintf('Attachment element must be an instance of %s. Found %s.', WebformAttachmentBase::class, get_class($instance)));
+    }
 
-    return $document;
+    $fileName = $instance::getFileName($element, $submission);
+    $mimeType = $instance::getFileMimeType($element, $submission);
+    $content = $instance::getFileContent($element, $submission);
+
+    return [
+      'content' => $content,
+      'size' => strlen($content),
+      'mime-type' => $mimeType,
+      'filename' => $fileName,
+    ];
   }
 
   /**
    * Get attachments.
    */
-  private function getAttachments(WebformSubmissionInterface $submission, array $handlerSettings, array $submissionData = []): array {
+  private function getAttachments(WebformSubmissionInterface $submission, array $handlerSettings): array {
     return [];
   }
 
