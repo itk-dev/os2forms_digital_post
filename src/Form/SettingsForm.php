@@ -16,6 +16,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 final class SettingsForm extends FormBase {
   use StringTranslationTrait;
 
+  public const SENDER_IDENTIFIER_TYPE = 'sender_identifier_type';
+  public const SENDER_IDENTIFIER = 'sender_identifier';
+
   /**
    * The settings.
    *
@@ -72,20 +75,20 @@ final class SettingsForm extends FormBase {
       '#title' => $this->t('Sender'),
       '#tree' => TRUE,
 
-      'identifier_type' => [
+      self::SENDER_IDENTIFIER_TYPE => [
         '#type' => 'select',
         '#title' => $this->t('Identifier type'),
         '#options' => [
           'CVR' => $this->t('CVR'),
         ],
-        '#default_value' => $defaultValues['sender']['identifier_type'] ?? 'CVR',
+        '#default_value' => $defaultValues['sender'][self::SENDER_IDENTIFIER_TYPE] ?? 'CVR',
         '#required' => TRUE,
       ],
 
-      'identifier' => [
+      self::SENDER_IDENTIFIER => [
         '#type' => 'textfield',
         '#title' => $this->t('Identifier'),
-        '#default_value' => $defaultValues['sender']['identifier'] ?? NULL,
+        '#default_value' => $defaultValues['sender'][self::SENDER_IDENTIFIER] ?? NULL,
         '#required' => TRUE,
       ],
     ];

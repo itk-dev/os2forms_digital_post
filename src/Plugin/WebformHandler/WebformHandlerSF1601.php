@@ -27,7 +27,7 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   public const TYPE = 'type';
   public const MESSAGE_TYPE = 'message_type';
   public const SENDER_LABEL = 'sender_label';
-  public const HEADER_LABEL = 'header_label';
+  public const MESSAGE_HEADER_LABEL = 'message_header_label';
   public const RECIPIENT_ELEMENT = 'recipient_element';
   public const ATTACHMENT_ELEMENT = 'attachment_element';
 
@@ -39,7 +39,7 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   /**
    * Maximum length of header label.
    */
-  private const HEADER_LABEL_MAX_LENGTH = 128;
+  private const MESSAGE_HEADER_LABEL_MAX_LENGTH = 128;
 
   /**
    * The token manager.
@@ -163,12 +163,12 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
       '#maxlength' => self::SENDER_LABEL_MAX_LENGTH,
     ];
 
-    $form[self::HEADER_LABEL] = [
+    $form[self::MESSAGE_HEADER_LABEL] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Header label'),
+      '#title' => $this->t('Message header label'),
       '#required' => TRUE,
-      '#default_value' => $this->configuration[self::HEADER_LABEL] ?? NULL,
-      '#maxlength' => self::HEADER_LABEL_MAX_LENGTH,
+      '#default_value' => $this->configuration[self::MESSAGE_HEADER_LABEL] ?? NULL,
+      '#maxlength' => self::MESSAGE_HEADER_LABEL_MAX_LENGTH,
     ];
 
     // Development.
@@ -234,7 +234,7 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
       self::TYPE,
       self::MESSAGE_TYPE,
       self::SENDER_LABEL,
-      self::HEADER_LABEL,
+      self::MESSAGE_HEADER_LABEL,
       self::RECIPIENT_ELEMENT,
       self::ATTACHMENT_ELEMENT,
     ] as $key) {

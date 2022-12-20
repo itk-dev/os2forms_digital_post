@@ -17,6 +17,7 @@ use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
 use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
 use Drupal\os2forms_digital_post\Exception\InvalidRecipientIdentifierElementException;
 use Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException;
+use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformSubmissionStorageInterface;
@@ -27,6 +28,9 @@ use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
  * Webform helper.
  */
 final class WebformHelperSF1601 {
+  private const RECIPIENT_IDENTIFIER_TYPE = 'recipient_identifier_type';
+  private const RECIPIENT_IDENTIFIER = 'recipient_identifier';
+
   /**
    * The settings.
    *
@@ -121,6 +125,7 @@ final class WebformHelperSF1601 {
         $message));
     }
 
+    // @todo handle CVR recipient
     $recipientIdentifierType = 'CPR';
     $recipientIdentifier = $submissionData[$recipientIdentifierKey] ?? NULL;
     if (NULL === $recipientIdentifier) {
@@ -134,34 +139,35 @@ final class WebformHelperSF1601 {
         $message));
     }
 
-    // @todo handle CVR recipient
-    /** @var \Drupal\os2forms_cpr_lookup\CPR\CprServiceResult $cprSearchResult */
+    // @todo Use this for building physical post address.
     $cprSearchResult = $this->cprService->search($recipientIdentifier);
     $result = FALSE;
 
     $senderSettings = $this->settings->get('sender');
+    $messageOptions = [
+      self::RECIPIENT_IDENTIFIER_TYPE => $recipientIdentifierType,
+      self::RECIPIENT_IDENTIFIER => $recipientIdentifier,
+
+      SettingsForm::SENDER_IDENTIFIER_TYPE => $senderSettings[SettingsForm::SENDER_IDENTIFIER_TYPE],
+      SettingsForm::SENDER_IDENTIFIER => $senderSettings[SettingsForm::SENDER_IDENTIFIER],
+
+      WebformHandlerSF1601::SENDER_LABEL => $handlerSettings[WebformHandlerSF1601::SENDER_LABEL],
+      WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
+    ];
+    $message = $this->buildMessage($submission, $messageOptions);
+
     $options = [
       'authority_cvr' => $senderSettings['identifier'],
       'certificate_locator' => $this->certificateLocatorHelper->getCertificateLocator(),
     ];
     $service = new SF1601($options);
     $transactionId = Serializer::createUuid();
-    $type = SF1601::TYPE_DIGITAL_POST;
-    $messageOptions = [
-      'recipient-id-type' => $recipientIdentifierType,
-      'recipient-id' => $recipientIdentifier,
-
-      'sender-id-type' => $senderSettings['identifier_type'],
-      'sender-id' => $senderSettings['identifier'],
-
-      'sender-label' => $handlerSettings['sender_label'],
-      'header-label' => $handlerSettings['header_label'],
-    ];
-    $message = $this->buildMessage($submission, $messageOptions);
+    $type = $handlerSettings[WebformHandlerSF1601::MESSAGE_TYPE] ?? SF1601::TYPE_DIGITAL_POST;
     $response = $service->kombiPostAfsend($transactionId, $type, $message);
 
-    $meMoMessage = $service->getLastKombiMeMoMessage();
+    // @todo What to return?
 
+    $meMoMessage = $service->getLastKombiMeMoMessage();
     echo $meMoMessage->ownerDocument->saveXML($meMoMessage);
   }
 
@@ -182,19 +188,19 @@ final class WebformHelperSF1601 {
     $message = new Message();
 
     $sender = (new Sender())
-      ->setIdType($options['sender-id-type'])
-      ->setSenderID($options['sender-id'])
-      ->setLabel($options['sender-label']);
+      ->setIdType($options[SettingsForm::SENDER_IDENTIFIER_TYPE])
+      ->setSenderID($options[SettingsForm::SENDER_IDENTIFIER])
+      ->setLabel($options[WebformHandlerSF1601::SENDER_LABEL]);
 
     $recipient = (new Recipient())
-      ->setIdType($options['recipient-id-type'])
-      ->setRecipientID($options['recipient-id']);
+      ->setIdType($options[self::RECIPIENT_IDENTIFIER_TYPE])
+      ->setRecipientID($options[self::RECIPIENT_IDENTIFIER]);
 
     $messageHeader = (new MessageHeader())
-      ->setMessageType($options['message-type'] ?? SF1601::MESSAGE_TYPE_DIGITAL_POST)
+      ->setMessageType($options[WebformHandlerSF1601::MESSAGE_TYPE] ?? SF1601::MESSAGE_TYPE_DIGITAL_POST)
       ->setMessageUUID($messageUUID)
       ->setMessageID($messageID)
-      ->setLabel($options['header-label'])
+      ->setLabel($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL])
       ->setMandatory(FALSE)
       ->setLegalNotification(FALSE)
       ->setSender($sender)
@@ -212,7 +218,7 @@ final class WebformHelperSF1601 {
       ->setFile([
         (new File())
           ->setEncodingFormat($document['mime-type'])
-          ->setLanguage($document['lnguage'] ?? 'da')
+          ->setLanguage($document['language'] ?? 'da')
           ->setFilename($document['filename'])
           ->setContent($document['content']),
       ]);
@@ -224,7 +230,7 @@ final class WebformHelperSF1601 {
         ->setFile([
           (new File())
             ->setEncodingFormat($attachment['mime-type'])
-            ->setLanguage($attachment['lnguage'] ?? 'da')
+            ->setLanguage($attachment['language'] ?? 'da')
             ->setFilename($attachment['filename'])
             ->setContent($attachment['content']),
         ]);
