@@ -8,5 +8,6 @@ services:
   Drupal\os2forms_digital_post\Commands\CommandsSF1601:
       arguments:
         - '@Drupal\os2forms_digital_post\Helper\WebformHelperSF1601'
+        - '@Drupal\os2forms_digital_post\Helper\MeMoHelper'
       tags:
         - { name: drush.command }

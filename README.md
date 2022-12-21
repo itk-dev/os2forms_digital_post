@@ -45,6 +45,14 @@ drush pm:enable os2forms_digital_post
 
 Go to `/admin/os2forms_digital_post/settings` to set up global settings for digital post.
 
+## Drush commands
+
+```sh
+drush --uri=$(itkdev-docker-compose url) os2forms_digital_post:digital-post:send --help
+
+drush --uri=$(itkdev-docker-compose url) os2forms_digital_post:digital-post:memo-show --help
+```
+
 --------------------------------------------------------------------------------
 
 Add the following configuration:

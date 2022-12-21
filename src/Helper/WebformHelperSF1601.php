@@ -2,28 +2,16 @@
 
 namespace Drupal\os2forms_digital_post\Helper;
 
-use DigitalPost\MeMo\AdditionalDocument;
-use DigitalPost\MeMo\File;
-use DigitalPost\MeMo\MainDocument;
-use DigitalPost\MeMo\Message;
-use DigitalPost\MeMo\MessageBody;
-use DigitalPost\MeMo\MessageHeader;
-use DigitalPost\MeMo\Recipient;
-use DigitalPost\MeMo\Sender;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
-use Drupal\Core\Render\ElementInfoManagerInterface;
 use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
-use Drupal\os2forms_digital_post\Exception\InvalidAttachmentElementException;
 use Drupal\os2forms_digital_post\Exception\InvalidRecipientIdentifierElementException;
 use Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException;
 use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
-use Drupal\webform\Plugin\WebformElementManagerInterface;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformSubmissionStorageInterface;
-use Drupal\webform_attachment\Element\WebformAttachmentBase;
 use ItkDev\Serviceplatformen\Service\SF1601\Serializer;
 use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
 
@@ -31,8 +19,8 @@ use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
  * Webform helper.
  */
 final class WebformHelperSF1601 {
-  private const RECIPIENT_IDENTIFIER_TYPE = 'recipient_identifier_type';
-  private const RECIPIENT_IDENTIFIER = 'recipient_identifier';
+  public const RECIPIENT_IDENTIFIER_TYPE = 'recipient_identifier_type';
+  public const RECIPIENT_IDENTIFIER = 'recipient_identifier';
 
   /**
    * The settings.
@@ -63,18 +51,11 @@ final class WebformHelperSF1601 {
   protected CprServiceInterface $cprService;
 
   /**
-   * The webform element plugin manager.
+   * The MeMo helper.
    *
-   * @var \Drupal\webform\Plugin\WebformElementManagerInterface
+   * @var MeMoHelper
    */
-  protected $webformElementManager;
-
-  /**
-   * Element info.
-   *
-   * @var \Drupal\Core\Render\ElementInfoManagerInterface
-   */
-  protected $elementInfoManager;
+  protected MeMoHelper $meMoHelper;
 
   /**
    * The logger.
@@ -91,16 +72,14 @@ final class WebformHelperSF1601 {
     CertificateLocatorHelper $certificateLocatorHelper,
     EntityTypeManagerInterface $entity_type_manager,
     CprServiceInterface $cprService,
-    WebformElementManagerInterface $webformElementManager,
-    ElementInfoManagerInterface $elementInfoManager,
+    MeMoHelper $meMoHelper,
     LoggerChannelFactoryInterface $loggerChannelFactory
   ) {
     $this->settings = $settings;
     $this->certificateLocatorHelper = $certificateLocatorHelper;
     $this->webformSubmissionStorage = $entity_type_manager->getStorage('webform_submission');
     $this->cprService = $cprService;
-    $this->webformElementManager = $webformElementManager;
-    $this->elementInfoManager = $elementInfoManager;
+    $this->meMoHelper = $meMoHelper;
     $this->logger = $loggerChannelFactory->get('os2forms_digital_post');
   }
 
@@ -169,7 +148,7 @@ final class WebformHelperSF1601 {
       WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
-    $message = $this->buildMessage($submission, $messageOptions, $handlerSettings, $submissionData);
+    $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings, $submissionData);
 
     $options = [
       'test_mode' => (bool) $this->settings->get('test_mode'),
@@ -194,104 +173,6 @@ final class WebformHelperSF1601 {
    */
   public function loadSubmission(int $id): ?WebformSubmissionInterface {
     return $this->webformSubmissionStorage->load($id);
-  }
-
-  /**
-   * Build MEMO message.
-   */
-  private function buildMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, array $submissionData = []): Message {
-    $messageUUID = Serializer::createUuid();
-    $messageID = Serializer::createUuid();
-
-    $message = new Message();
-
-    $sender = (new Sender())
-      ->setIdType($options[SettingsForm::SENDER_IDENTIFIER_TYPE])
-      ->setSenderID($options[SettingsForm::SENDER_IDENTIFIER])
-      ->setLabel($options[WebformHandlerSF1601::SENDER_LABEL]);
-
-    $recipient = (new Recipient())
-      ->setIdType($options[self::RECIPIENT_IDENTIFIER_TYPE])
-      ->setRecipientID($options[self::RECIPIENT_IDENTIFIER]);
-
-    $messageHeader = (new MessageHeader())
-      ->setMessageType($options[WebformHandlerSF1601::MESSAGE_TYPE] ?? SF1601::MESSAGE_TYPE_DIGITAL_POST)
-      ->setMessageUUID($messageUUID)
-      ->setMessageID($messageID)
-      ->setLabel($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL])
-      ->setMandatory(FALSE)
-      ->setLegalNotification(FALSE)
-      ->setSender($sender)
-      ->setRecipient($recipient);
-
-    $message->setMessageHeader($messageHeader);
-
-    $body = (new MessageBody())
-      ->setCreatedDateTime(new \DateTime());
-
-    $document = $this->getMainDocument($submission, $handlerSettings);
-    $attachments = $this->getAttachments($submission, $handlerSettings);
-
-    $mainDocument = (new MainDocument())
-      ->setFile([
-        (new File())
-          ->setEncodingFormat($document['mime-type'])
-          ->setLanguage($document['language'] ?? 'da')
-          ->setFilename($document['filename'])
-          ->setContent($document['content']),
-      ]);
-    $body->setMainDocument($mainDocument);
-
-    foreach ($attachments as $attachment) {
-      $additionalDocument = (new AdditionalDocument())
-        ->setLabel($attachment['label'] ?? $attachment['filename'])
-        ->setFile([
-          (new File())
-            ->setEncodingFormat($attachment['mime-type'])
-            ->setLanguage($attachment['language'] ?? 'da')
-            ->setFilename($attachment['filename'])
-            ->setContent($attachment['content']),
-        ]);
-      $body->addToAdditionalDocument($additionalDocument);
-    }
-
-    $message->setMessageBody($body);
-
-    return $message;
-  }
-
-  /**
-   * Get main document.
-   *
-   * @see WebformAttachmentController::download()
-   */
-  public function getMainDocument(WebformSubmissionInterface $submission, array $handlerSettings): array {
-    // Lifted from Drupal\webform_attachment\Controller\WebformAttachmentController::download.
-    $element = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE][WebformHandlerSF1601::ATTACHMENT_ELEMENT];
-    $element = $submission->getWebform()->getElement($element) ?: [];
-    [$type] = explode(':', $element['#type']);
-    $instance = $this->elementInfoManager->createInstance($type);
-    if (!$instance instanceof WebformAttachmentBase) {
-      throw new InvalidAttachmentElementException(sprintf('Attachment element must be an instance of %s. Found %s.', WebformAttachmentBase::class, get_class($instance)));
-    }
-
-    $fileName = $instance::getFileName($element, $submission);
-    $mimeType = $instance::getFileMimeType($element, $submission);
-    $content = $instance::getFileContent($element, $submission);
-
-    return [
-      'content' => $content,
-      'size' => strlen($content),
-      'mime-type' => $mimeType,
-      'filename' => $fileName,
-    ];
-  }
-
-  /**
-   * Get attachments.
-   */
-  private function getAttachments(WebformSubmissionInterface $submission, array $handlerSettings): array {
-    return [];
   }
 
 }

@@ -2,29 +2,46 @@
 
 namespace Drupal\os2forms_digital_post\Commands;
 
+use DigitalPost\MeMo\Message;
+use Drupal\os2forms_digital_post\Helper\MeMoHelper;
 use Drupal\os2forms_digital_post\Helper\WebformHelperSF1601;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drush\Commands\DrushCommands;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
+use Symfony\Component\Console\Exception\InvalidOptionException;
+use Symfony\Component\Yaml\Yaml;
 
 /**
  * Drush commands file for commands related to os2forms_digital_post.
  */
-class CommandsSF1601 extends DrushCommands {
+final class CommandsSF1601 extends DrushCommands {
+  private const HIDDEN_CONTENT = '👻';
+  private const DUMP_OPTION_VALUES = [
+    'main-document-file-info',
+    'main-document-file-content',
+  ];
 
   /**
    * The webform helper.
    *
    * @var \Drupal\os2forms_digital_post\WebformHelperSF1601
    */
-  protected WebformHelperSF1601 $helper;
+  private WebformHelperSF1601 $webformHelper;
+
+  /**
+   * The MeMo helper.
+   *
+   * @var \Drupal\os2forms_digital_post\Helper\MeMoHelper
+   */
+  private MeMoHelper $meMoHelper;
 
   /**
    * Constructor.
    */
-  public function __construct(WebformHelperSF1601 $webformHelper) {
+  public function __construct(WebformHelperSF1601 $webformHelper, MeMoHelper $meMoHelper) {
     parent::__construct();
-    $this->helper = $webformHelper;
+    $this->webformHelper = $webformHelper;
+    $this->meMoHelper = $meMoHelper;
   }
 
   /**
@@ -57,11 +74,11 @@ class CommandsSF1601 extends DrushCommands {
   ]) {
     [$submission, $handlerSettings, $submissionData] = $this->getData($submissionId, $handlerId, $options);
 
-    $this->helper->sendDigitalPost($submission->id(), $handlerSettings, $submissionData);
+    $this->webformHelper->sendDigitalPost($submission->id(), $handlerSettings, $submissionData);
   }
 
   /**
-   * Send digital post for a submission.
+   * Show MeMo message for a submission.
    *
    * @param int $submissionId
    *   The submission id.
@@ -76,37 +93,74 @@ class CommandsSF1601 extends DrushCommands {
    *   The recipient element key.
    * @option string attachment-element
    *   The attachment element key.
-   * @option bool dump-content
+   * @option string dump
    *   Dump content to stdout.
    *
-   * @command os2forms_digital_post:digital-post:show-document
-   * @usage os2forms_digital_post:digital-post:show-document --help
+   * @command os2forms_digital_post:digital-post:memo-show
+   * @usage os2forms_digital_post:digital-post:memo-show --help
    */
-  public function showDocument(int $submissionId, string $handlerId, array $options = [
+  public function meMoShow(int $submissionId, string $handlerId, array $options = [
     'handler-settings' => NULL,
     'recipient-element' => NULL,
     'attachment-element' => NULL,
     'submission-data' => NULL,
-    'dump-content' => FALSE,
+    'dump' => NULL,
   ]) {
     [$submission, $handlerSettings] = $this->getData($submissionId, $handlerId, $options);
 
-    $document = $this->helper->getMainDocument($submission, $handlerSettings);
+    $messageOptions = [];
+    $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings);
 
-    if ($options['dump-content']) {
-      echo $document['content'];
-      exit;
+    if (isset($options['dump'])) {
+      if (TRUE === $options['dump']) {
+        throw new InvalidOptionException('Missing dump option value');
+      }
+      $this->dump((string) $options['dump'], $message);
+      return;
     }
 
-    $document['content'] = '👻';
-    $this->output()->writeln(json_encode($document, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES));
+    $document = $this->meMoHelper->message2dom($message);
+
+    $this->output()->writeln($document->saveXML());
+  }
+
+  /**
+   * Dump stuff.
+   */
+  private function dump(string $dump, Message $message) {
+    switch ($dump) {
+      case 'main-document-file-info':
+        foreach ($message->getMessageBody()->getMainDocument()->getFile() as $file) {
+          $this->output()->writeln(Yaml::dump([
+            MeMoHelper::DOCUMENT_FILENAME => $file->getFilename(),
+            MeMoHelper::DOCUMENT_MIME_TYPE => $file->getEncodingFormat(),
+            MeMoHelper::DOCUMENT_LANGUAGE => $file->getLanguage(),
+            MeMoHelper::DOCUMENT_CONTENT => self::HIDDEN_CONTENT,
+          ]));
+        }
+        return;
+
+      case 'main-document-file-content':
+        foreach ($message->getMessageBody()->getMainDocument()->getFile() as $file) {
+          $this->output()->write($file->getContent());
+          break;
+        }
+        return;
+
+      default:
+        throw new InvalidOptionException(sprintf(
+          'Invalid dump option %s. Must be one of %s',
+          json_encode($dump),
+          implode(', ', array_map('json_encode', self::DUMP_OPTION_VALUES))
+        ));
+    }
   }
 
   /**
    * Get data.
    */
   private function getData(int $submissionId, string $handlerId, array $options) {
-    $submission = $this->helper->loadSubmission($submissionId);
+    $submission = $this->webformHelper->loadSubmission($submissionId);
     if (NULL === $submission) {
       throw new InvalidArgumentException(sprintf('Cannot load submission %d', $submissionId));
     }

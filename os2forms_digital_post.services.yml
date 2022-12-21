@@ -25,14 +25,17 @@ services:
     arguments:
       - "@Drupal\\os2forms_digital_post\\Helper\\Settings"
 
+  Drupal\os2forms_digital_post\Helper\MeMoHelper:
+    arguments:
+      - "@plugin.manager.element_info"
+
   Drupal\os2forms_digital_post\Helper\WebformHelperSF1601:
     arguments:
       - "@Drupal\\os2forms_digital_post\\Helper\\Settings"
       - "@Drupal\\os2forms_digital_post\\Helper\\CertificateLocatorHelper"
       - "@entity_type.manager"
       - "@os2forms_cpr_lookup.service"
-      - "@plugin.manager.webform.element"
-      - "@plugin.manager.element_info"
+      - "@Drupal\\os2forms_digital_post\\Helper\\MeMoHelper"
       - "@logger.factory"
 
   Drupal\os2forms_digital_post\Helper\SF1461Helper:
