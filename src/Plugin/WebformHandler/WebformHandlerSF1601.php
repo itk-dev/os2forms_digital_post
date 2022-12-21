@@ -25,6 +25,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  */
 final class WebformHandlerSF1601 extends WebformHandlerBase {
   public const MEMO_MESSAGE = 'memo_message';
+  public const MEMO_ACTIONS = 'memo_actions';
   public const TYPE = 'type';
   public const MESSAGE_TYPE = 'message_type';
   public const SENDER_LABEL = 'sender_label';
@@ -111,7 +112,7 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   /**
    * {@inheritdoc}
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $formState) {
     $form[self::MEMO_MESSAGE] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Message'),
@@ -174,6 +175,54 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
       '#maxlength' => self::MESSAGE_HEADER_LABEL_MAX_LENGTH,
     ];
 
+    $form[self::MEMO_ACTIONS] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Actions'),
+      '#description' => $this->t('Remove an action by clearing %action and saving.', ['%action' => (string) $this->t('Action')]),
+    ];
+
+    $form[self::MEMO_ACTIONS]['actions'] = [
+      '#type' => 'table',
+    ];
+
+    $actionOptions = [
+      // @todo Handle SF1601::ACTION_AFTALE.
+      SF1601::ACTION_BEKRAEFT => $this->getTranslatedActionName(SF1601::ACTION_BEKRAEFT),
+      SF1601::ACTION_BETALING => $this->getTranslatedActionName(SF1601::ACTION_BETALING),
+      SF1601::ACTION_FORBEREDELSE => $this->getTranslatedActionName(SF1601::ACTION_FORBEREDELSE),
+      SF1601::ACTION_INFORMATION => $this->getTranslatedActionName(SF1601::ACTION_INFORMATION),
+      SF1601::ACTION_SELVBETJENING => $this->getTranslatedActionName(SF1601::ACTION_SELVBETJENING),
+      SF1601::ACTION_TILMELDING => $this->getTranslatedActionName(SF1601::ACTION_TILMELDING),
+      SF1601::ACTION_UNDERSKRIV => $this->getTranslatedActionName(SF1601::ACTION_UNDERSKRIV),
+    ];
+    $actions = $this->configuration[self::MEMO_ACTIONS]['actions'] ?? [];
+    for ($i = 0; $i <= count($actions); $i++) {
+      $action = $actions[$i];
+      $form[self::MEMO_ACTIONS]['actions'][$i]['action'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Action'),
+        '#options' => $actionOptions,
+        '#default_value' => $action['action'] ?? NULL,
+        '#empty_value' => '',
+      ];
+      $form[self::MEMO_ACTIONS]['actions'][$i]['url'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Url'),
+        '#default_value' => $action['url'] ?? NULL,
+        '#states' => [
+          'required' => [sprintf(':input[name="settings[memo_actions][actions][%d][action]"]', $i) => ['filled' => TRUE]],
+        ],
+      ];
+      $form[self::MEMO_ACTIONS]['actions'][$i]['label'] = [
+        '#type' => 'textfield',
+        '#title' => $this->t('Label'),
+        '#default_value' => $action['label'] ?? NULL,
+        '#states' => [
+          'required' => [sprintf(':input[name="settings[memo_actions][actions][%d][action]"]', $i) => ['filled' => TRUE]],
+        ],
+      ];
+    }
+
     // Development.
     $form['development'] = [
       '#type' => 'details',
@@ -230,28 +279,64 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   /**
    * {@inheritdoc}
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
-    parent::submitConfigurationForm($form, $form_state);
+  public function validateConfigurationForm(array &$form, FormStateInterface $formState) {
+    $actions = $formState->getValue(self::MEMO_ACTIONS)['actions'] ?? [];
 
-    foreach ([
-      self::MEMO_MESSAGE,
-    ] as $key) {
-      $this->configuration[$key] = $form_state->getValue($key);
+    $definedActions = [];
+    foreach ($actions as $index => $action) {
+      if (!empty($action['action'])) {
+        if (empty($action['url'])) {
+          $formState->setErrorByName(
+            self::MEMO_ACTIONS . '][actions][' . $index . '][url',
+            $this->t('Url for action %action is required.', [
+              '%action' => $this->getTranslatedActionName($action['action']),
+              '%url' => $action['url'] ?? '',
+            ])
+          );
+        }
+        if (isset($definedActions[$action['action']])) {
+          $formState->setErrorByName(
+            self::MEMO_ACTIONS . '][actions][' . $index . '][action',
+            $this->t('Action %action already defined.', [
+              '%action' => $this->getTranslatedActionName($action['action']),
+            ])
+          );
+        }
+        $definedActions[$action['action']] = $action;
+      }
     }
-
-    $this->configuration['debug'] = (bool) $form_state->getValue('debug');
   }
 
   /**
    * {@inheritdoc}
    */
-  public function postSave(WebformSubmissionInterface $webform_submission, $update = TRUE) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $formState) {
+    parent::submitConfigurationForm($form, $formState);
+
+    $this->configuration[self::MEMO_MESSAGE] = $formState->getValue(self::MEMO_MESSAGE);
+    // Filter out actions with no action set.
+    $actions = $formState->getValue(self::MEMO_ACTIONS);
+    $actions['actions'] = array_values(array_filter(
+      $actions['actions'],
+      static function (array $action) {
+        return !empty($action['action']);
+      }
+    ));
+    $this->configuration[self::MEMO_ACTIONS] = $actions;
+
+    $this->configuration['debug'] = (bool) $formState->getValue('debug');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postSave(WebformSubmissionInterface $webformSubmission, $update = TRUE) {
     $queueStorage = $this->entityTypeManager->getStorage('advancedqueue_queue');
     /** @var \Drupal\advancedqueue\Entity\Queue $queue */
     $queue = $queueStorage->load('send_digital_post');
     $job = Job::create(SendDigitalPostSF1601::class, [
-      'formId' => $webform_submission->getWebform()->id(),
-      'submissionId' => $webform_submission->id(),
+      'formId' => $webformSubmission->getWebform()->id(),
+      'submissionId' => $webformSubmission->id(),
       'handlerConfiguration' => $this->configuration,
     ]);
     $queue->enqueueJob($job);
@@ -275,6 +360,33 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
       ];
       $this->messenger()->addWarning($this->t('Invoked @id: @class_name:@method_name @context1', $t_args), TRUE);
     }
+  }
+
+  /**
+   * Translated action names.
+   *
+   * @var array|null
+   */
+  private ?array $translatedActionNames = NULL;
+
+  /**
+   * Get translated action name.
+   */
+  private function getTranslatedActionName(string $action) {
+    if (NULL === $this->translatedActionNames) {
+      $this->translatedActionNames = [
+        SF1601::ACTION_AFTALE => $this->t('Aftale', [], ['context' => 'memo action']),
+        SF1601::ACTION_BEKRAEFT => $this->t('Bekræft', [], ['context' => 'memo action']),
+        SF1601::ACTION_BETALING => $this->t('Betaling', [], ['context' => 'memo action']),
+        SF1601::ACTION_FORBEREDELSE => $this->t('Forberedelse', [], ['context' => 'memo action']),
+        SF1601::ACTION_INFORMATION => $this->t('Information', [], ['context' => 'memo action']),
+        SF1601::ACTION_SELVBETJENING => $this->t('Selvbetjening', [], ['context' => 'memo action']),
+        SF1601::ACTION_TILMELDING => $this->t('Tilmelding', [], ['context' => 'memo action']),
+        SF1601::ACTION_UNDERSKRIV => $this->t('Underskriv', [], ['context' => 'memo action']),
+      ];
+    }
+
+    return $this->translatedActionNames[$action] ?? $action;
   }
 
 }
