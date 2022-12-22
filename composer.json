@@ -44,7 +44,9 @@
         "itk-dev/os2forms_cpr_lookup": "^1.6"
     },
     "autoload": {
-        "Drupal\\os2forms_digital_post\\": "src/"
+        "psr-4": {
+            "Drupal\\os2forms_digital_post\\": "src/"
+        }
     },
     "require-dev": {
         "wsdltophp/packagegenerator": "^4.0",
