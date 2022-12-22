@@ -1,7 +1,9 @@
 # OS2Forms Digital Post
 
-Send Digital Post to danish citizens from a webform.
-This module use the [SF1600](https://digitaliseringskataloget.dk/integration/sf1600) service from Serviceplatformen. Information and documentation can be obtained by following that link.
+Send Digital Post to danish citizens from a webform. This module use the
+[SF1600](https://digitaliseringskataloget.dk/integration/sf1600) service from
+Serviceplatformen. Information and documentation can be obtained by following
+that link.
 
 ## Installation
 
@@ -50,17 +52,22 @@ $config['os2forms_digital_post'] = [
 ```
 
 ## Templating / Styling the PDF
-You'll need to provide a PDF template, that will be rendered when sending letters via digital post.
-The template has to be in the twig format and accessible by this module. Configure the path to your templates
-in the settings mentioned above.
+
+You'll need to provide a PDF template, that will be rendered when sending
+letters via digital post. The template has to be in the twig format and
+accessible by this module. Configure the path to your templates in the settings
+mentioned above.
 
 The following variables is present in the twig-template:
+
 * logo - Path to the logo in your template.
 * recipient - Which holds information about the recipient of the letter.
 * elements - The elements submitted in the form.
 
 ### Structure of template
+
 Your template folder structure has to be as following:
+
 ```shell
 /templates-root # Set this folder as "path_to_templates" in the settings.
   /name-of-template
@@ -100,9 +107,11 @@ docker run --rm --interactive --tty --volume ${PWD}:/app node:18 yarn --cwd /app
 
 ## Drush command
 
-A drush command is available for testing purposes. It creates a PDF from a template and a given submission.
+A drush command is available for testing purposes. It creates a PDF from a
+template and a given submission.
 
 Read more:
+
 ```shell
 drush os2forms_digital_post:create_pdf --help
 ```
