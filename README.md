@@ -80,16 +80,22 @@ showing the result in webforms.
 
 ## Coding standards
 
-Check coding standards (run `composer install` to install the required tools):
+Check coding standards:
 
-```shell
-composer coding-standards-check
+```sh
+docker run --rm --interactive --tty --volume ${PWD}:/app itkdev/php7.4-fpm:latest composer install
+docker run --rm --interactive --tty --volume ${PWD}:/app itkdev/php7.4-fpm:latest composer coding-standards-check
+
+docker run --rm --interactive --tty --volume ${PWD}:/app node:18 yarn --cwd /app install
+docker run --rm --interactive --tty --volume ${PWD}:/app node:18 yarn --cwd /app coding-standards-check
 ```
 
 Apply coding standards:
 
 ```shell
-composer coding-standards-apply
+docker run --rm --interactive --tty --volume ${PWD}:/app itkdev/php7.4-fpm:latest composer coding-standards-apply
+
+docker run --rm --interactive --tty --volume ${PWD}:/app node:18 yarn --cwd /app coding-standards-apply
 ```
 
 ## Drush command
