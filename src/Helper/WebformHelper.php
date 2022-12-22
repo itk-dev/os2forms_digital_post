@@ -115,10 +115,15 @@ final class WebformHelper {
    *   Handler config.
    *
    * @throws \Drupal\os2forms_digital_post\Exception\CprElementNotFoundInSubmissionException
+   *   A CprElementNotFoundInSubmissionException.
    * @throws \Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException
+   *   A SubmissionNotFoundException.
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
+   *   An InvalidPluginDefinitionException.
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   *   A PluginNotFoundException.
    * @throws \ItkDev\Serviceplatformen\Service\Exception\ServiceException
+   *   A ServiceException.
    */
   public function sendDigitalPost(string $submissionId, array $handlerConfiguration) {
     /** @var \Drupal\webform\Entity\WebformSubmission $submission */
