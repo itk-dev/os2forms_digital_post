@@ -23,8 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-versions: [ '7.4', '8.0', '8.1' ]
-        dependency-version: [ prefer-lowest, prefer-stable ]
+        php-versions: [ '7.4' ]
+        dependency-version: [ prefer-stable ]
     steps:
       - uses: actions/checkout@master
       - name: Setup PHP, with composer and extensions
@@ -55,8 +55,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-versions: [ '7.4', '8.0', '8.1' ]
-        dependency-version: [ prefer-lowest, prefer-stable ]
+        php-versions: [ '7.4' ]
+        dependency-version: [ prefer-stable ]
     steps:
       - uses: actions/checkout@master
       - name: Setup PHP, with composer and extensions
@@ -88,8 +88,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-versions: [ '7.4', '8.0', '8.1' ]
-        dependency-version: [ prefer-lowest, prefer-stable ]
+        php-versions: [ '7.4' ]
+        dependency-version: [ prefer-stable ]
     steps:
       - uses: actions/checkout@master
       - name: Setup PHP, with composer and extensions
@@ -118,12 +118,12 @@ jobs:
           mkdir -p drupal/web/modules/contrib/os2forms_digital_post
           cp -r os2forms_digital_post.* composer.json src drupal/web/modules/contrib/os2forms_digital_post
           # Add our module as a composer repository.
-          composer --no-interaction --working-dir=drupal config repositories.os2forms/os2forms_digital_post path web/modules/contrib/os2forms_digital_post
+          composer --no-interaction --working-dir=drupal config repositories.itk-dev/os2forms_digital_post path web/modules/contrib/os2forms_digital_post
           # Restore Drupal composer repository.
           composer --no-interaction --working-dir=drupal config repositories.drupal composer https://packages.drupal.org/8
 
           # Require our module.
-          composer --no-interaction --working-dir=drupal require 'os2forms/os2forms_digital_post:*'
+          composer --no-interaction --working-dir=drupal require 'itk-dev/os2forms_digital_post:*'
 
           # Check code
           composer --no-interaction --working-dir=drupal require --dev drupal/core-dev
