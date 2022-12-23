@@ -9,8 +9,8 @@
             "email": "lats@aarhus.dk"
         }
     ],
-    "repositories": [
-        {
+    "repositories": {
+        "drupal/webform_embed": {
             "// ": "Lifted from https://github.com/itk-dev/os2forms_selvbetjening/blob/develop/composer.json, which see",
             "//": "https://git.drupalcode.org/issue/webform_embed-3149360/-/tree/3149360-automated-drupal-9",
             "type": "package",
@@ -26,7 +26,7 @@
                 }
             }
         },
-        {
+        "drupal/webform_permissions_by_term": {
             "// ": "Lifted from https://github.com/itk-dev/os2forms_selvbetjening/blob/develop/composer.json, which see",
             "type": "package",
             "package": {
@@ -45,11 +45,11 @@
                 "type": "drupal-module"
             }
         },
-        {
+        "drupal": {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
         }
-    ],
+    },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {

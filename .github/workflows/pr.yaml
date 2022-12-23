@@ -117,16 +117,25 @@ jobs:
           # Copy our module source code into the Drupal module folder.
           mkdir -p drupal/web/modules/contrib/os2forms_digital_post
           cp -r os2forms_digital_post.* composer.json src drupal/web/modules/contrib/os2forms_digital_post
+
+          # Add repositories from our composer.json (which see).
+          # @see https://getcomposer.org/doc/03-cli.md#modifying-repositories
+          composer --working-dir=drupal --no-interaction config repositories.drupal/webform_embed "$(composer config repositories.drupal/webform_embed)"
+          composer --working-dir=drupal --no-interaction config repositories.drupal/webform_permissions_by_term "$(composer config repositories.drupal/webform_permissions_by_term)"
+
+          # Allow plugins
+          composer --working-dir=drupal config --no-plugins allow-plugins.vaimo/composer-patches true
+
           # Add our module as a composer repository.
-          composer --no-interaction --working-dir=drupal config repositories.itk-dev/os2forms_digital_post path web/modules/contrib/os2forms_digital_post
+          composer --working-dir=drupal --no-interaction config --append repositories.itk-dev/os2forms_digital_post path web/modules/contrib/os2forms_digital_post
           # Restore Drupal composer repository.
-          composer --no-interaction --working-dir=drupal config repositories.drupal composer https://packages.drupal.org/8
+          # composer --working-dir=drupal --no-interaction config --append repositories.drupal composer https://packages.drupal.org/8
 
           # Require our module.
-          composer --no-interaction --working-dir=drupal require 'itk-dev/os2forms_digital_post:*'
+          composer --working-dir=drupal --no-interaction require 'itk-dev/os2forms_digital_post:*'
 
           # Check code
-          composer --no-interaction --working-dir=drupal require --dev drupal/core-dev
+          composer --working-dir=drupal --no-interaction require --dev drupal/core-dev
           cd drupal/web/modules/contrib/os2forms_digital_post
           # Remove our non-dev dependencies to prevent duplicated Drupal installation
           # PHP Fatal error:  Cannot redeclare drupal_get_filename() (previously declared in /home/runner/work/os2forms_digital_post/os2forms_digital_post/drupal/web/modules/contrib/os2forms_digital_post/vendor/drupal/core/includes/bootstrap.inc:190) in /home/runner/work/os2forms_digital_post/os2forms_digital_post/drupal/web/core/includes/bootstrap.inc on line 190
