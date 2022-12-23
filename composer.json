@@ -71,9 +71,18 @@
     "require-dev": {
         "wsdltophp/packagegenerator": "^4.0",
         "drupal/coder": "^8.3",
-        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1"
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
+        "mglaman/drupal-check": "^1.4",
+        "phpunit/phpunit": "^9.5"
     },
     "scripts": {
+        "code-analysis/drupal-check": [
+            "# @see https://github.com/mglaman/drupal-check/issues/261#issuecomment-1030141772 for details on exclude-dir value",
+            "drupal-check --deprecations --analysis --exclude-dir='vendor,*/Client/*' *.* src"
+        ],
+        "code-analysis": [
+            "@code-analysis/drupal-check"
+        ],
         "coding-standards-check/phpcs": [
             "phpcs --standard=phpcs.xml.dist"
         ],
