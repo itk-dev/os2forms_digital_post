@@ -108,7 +108,11 @@ final class CommandsSF1601 extends DrushCommands {
   ]) {
     [$submission, $handlerSettings] = $this->getData($submissionId, $handlerId, $options);
 
-    $messageOptions = [];
+    $handlerMessageSettings = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE];
+    $messageOptions = [
+      WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
+      WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
+    ];
     $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings);
 
     if (isset($options['dump'])) {

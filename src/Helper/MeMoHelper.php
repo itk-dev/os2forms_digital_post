@@ -17,6 +17,7 @@ use Drupal\os2forms_digital_post\Exception\InvalidAttachmentElementException;
 use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drupal\webform\WebformSubmissionInterface;
+use Drupal\webform\WebformTokenManagerInterface;
 use Drupal\webform_attachment\Element\WebformAttachmentBase;
 use ItkDev\Serviceplatformen\Service\SF1601\Serializer;
 use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
@@ -40,10 +41,18 @@ class MeMoHelper {
   protected $elementInfoManager;
 
   /**
+   * The webform token manager.
+   *
+   * @var \Drupal\webform\WebformTokenManagerInterface
+   */
+  protected $webformTokenManager;
+
+  /**
    * Constructor.
    */
-  public function __construct(ElementInfoManagerInterface $elementInfoManager) {
+  public function __construct(ElementInfoManagerInterface $elementInfoManager, WebformTokenManagerInterface $webformTokenManager) {
     $this->elementInfoManager = $elementInfoManager;
+    $this->webformTokenManager = $webformTokenManager;
   }
 
   /**
@@ -55,20 +64,22 @@ class MeMoHelper {
 
     $message = new Message();
 
+    $label = $this->replaceTokens($options[WebformHandlerSF1601::SENDER_LABEL], $submission);
     $sender = (new Sender())
       ->setIdType($options[SettingsForm::SENDER_IDENTIFIER_TYPE])
       ->setSenderID($options[SettingsForm::SENDER_IDENTIFIER])
-      ->setLabel($options[WebformHandlerSF1601::SENDER_LABEL]);
+      ->setLabel($label);
 
     $recipient = (new Recipient())
       ->setIdType($options[WebformHelperSF1601::RECIPIENT_IDENTIFIER_TYPE])
       ->setRecipientID($options[WebformHelperSF1601::RECIPIENT_IDENTIFIER]);
 
+    $label = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
     $messageHeader = (new MessageHeader())
       ->setMessageType($options[WebformHandlerSF1601::MESSAGE_TYPE] ?? SF1601::MESSAGE_TYPE_DIGITAL_POST)
       ->setMessageUUID($messageUUID)
       ->setMessageID($messageID)
-      ->setLabel($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL])
+      ->setLabel($label)
       ->setMandatory(FALSE)
       ->setLegalNotification(FALSE)
       ->setSender($sender)
@@ -93,7 +104,7 @@ class MeMoHelper {
 
     if (isset($handlerSettings[WebformHandlerSF1601::MEMO_ACTIONS]['actions'])) {
       foreach ($handlerSettings[WebformHandlerSF1601::MEMO_ACTIONS]['actions'] as $spec) {
-        $mainDocument->addToAction($this->buildAction($spec));
+        $mainDocument->addToAction($this->buildAction($spec, $submission));
       }
     }
 
@@ -130,17 +141,19 @@ class MeMoHelper {
   /**
    * Build action.
    */
-  private function buildAction(array $options): Action {
+  private function buildAction(array $options, WebformSubmissionInterface $submission): Action {
+    $label = $this->replaceTokens($options['label'], $submission);
     $action = (new Action())
       ->setActionCode($options['action'])
-      ->setLabel($options['label']);
+      ->setLabel($label);
     if (SF1601::ACTION_AFTALE === $options['action']) {
       throw new \RuntimeException(sprintf('Cannot handle action %s', $options['action']));
     }
     elseif ($options['url']) {
+      $url = $this->replaceTokens($options['url'], $submission);
       $action->setEntryPoint(
         (new EntryPoint())
-          ->setUrl($options['url'])
+          ->setUrl($url)
           );
     }
 
@@ -180,6 +193,13 @@ class MeMoHelper {
    */
   private function getAttachments(WebformSubmissionInterface $submission, array $handlerSettings): array {
     return [];
+  }
+
+  /**
+   * Replace tokens.
+   */
+  private function replaceTokens(string $text, WebformSubmissionInterface $submission): string {
+    return $this->webformTokenManager->replace($text, $submission);
   }
 
 }

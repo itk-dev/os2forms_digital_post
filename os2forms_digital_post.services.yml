@@ -28,6 +28,7 @@ services:
   Drupal\os2forms_digital_post\Helper\MeMoHelper:
     arguments:
       - "@plugin.manager.element_info"
+      - "@webform.token_manager"
 
   Drupal\os2forms_digital_post\Helper\WebformHelperSF1601:
     arguments:
