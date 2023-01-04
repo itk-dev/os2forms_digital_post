@@ -92,8 +92,11 @@ final class WebformHelperSF1601 {
    *   The Handler settings.
    * @param array $submissionData
    *   Submission data. Only for overriding during testing and development.
+   *
+   * @return array
+   *   [The response, The MeMo message].
    */
-  public function sendDigitalPost(string $submissionId, array $handlerSettings, array $submissionData = []) {
+  public function sendDigitalPost(string $submissionId, array $handlerSettings, array $submissionData = []): array {
     $submission = $this->loadSubmission($submissionId);
     if (NULL === $submission) {
       $this->logger->error(
@@ -160,12 +163,7 @@ final class WebformHelperSF1601 {
     $type = $handlerMessageSettings[WebformHandlerSF1601::TYPE] ?? SF1601::TYPE_DIGITAL_POST;
     $response = $service->kombiPostAfsend($transactionId, $type, $message);
 
-    // DEBUG.
-    $meMoMessage = $service->getLastKombiMeMoMessage();
-    echo $meMoMessage->ownerDocument->saveXML($meMoMessage);
-    // DEBUG.
-    // @todo What to return?
-    return $response;
+    return [$response, $service->getLastKombiMeMoMessage()];
   }
 
   /**
