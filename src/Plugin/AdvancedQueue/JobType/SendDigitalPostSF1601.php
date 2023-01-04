@@ -6,7 +6,6 @@ use Drupal\advancedqueue\Job;
 use Drupal\advancedqueue\JobResult;
 use Drupal\advancedqueue\Plugin\AdvancedQueue\JobType\JobTypeBase;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\os2forms_digital_post\Helper\WebformHelper;
 use Drupal\os2forms_digital_post\Helper\WebformHelperSF1601;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -16,15 +15,17 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  * @AdvancedQueueJobType(
  *   id = "Drupal\os2forms_digital_post\Plugin\AdvancedQueue\JobType\SendDigitalPostSF1601",
  *   label = @Translation("Send digital post (sf1601)"),
+ *   max_retries = 5,
+ *   retry_delay = 60,
  * )
  */
 final class SendDigitalPostSF1601 extends JobTypeBase implements ContainerFactoryPluginInterface {
   /**
    * The webform helper.
    *
-   * @var \Drupal\os2forms_digital_post\Helper\WebformHelper
+   * @var \Drupal\os2forms_digital_post\Helper\WebformHelperSF1601
    */
-  private WebformHelper $helper;
+  private WebformHelperSF1601 $helper;
 
   /**
    * {@inheritdoc}
@@ -45,7 +46,7 @@ final class SendDigitalPostSF1601 extends JobTypeBase implements ContainerFactor
     array $configuration,
     $plugin_id,
     $plugin_definition,
-    WebformHelper $helper
+    WebformHelperSF1601 $helper
   ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->helper = $helper;
