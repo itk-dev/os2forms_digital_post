@@ -332,8 +332,9 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
    */
   public function postSave(WebformSubmissionInterface $webformSubmission, $update = TRUE) {
     $queueStorage = $this->entityTypeManager->getStorage('advancedqueue_queue');
+    // @todo Add a module setting for which queue to use.
     /** @var \Drupal\advancedqueue\Entity\Queue $queue */
-    $queue = $queueStorage->load('send_digital_post');
+    $queue = $queueStorage->load('os2forms_digital_post');
     $job = Job::create(SendDigitalPostSF1601::class, [
       'formId' => $webformSubmission->getWebform()->id(),
       'submissionId' => $webformSubmission->id(),

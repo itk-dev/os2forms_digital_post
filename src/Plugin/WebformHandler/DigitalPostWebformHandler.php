@@ -315,7 +315,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
   public function postSave(WebformSubmissionInterface $webform_submission, $update = TRUE) {
     $queueStorage = $this->entityTypeManager->getStorage('advancedqueue_queue');
     /** @var \Drupal\advancedqueue\Entity\Queue $queue */
-    $queue = $queueStorage->load('send_digital_post');
+    $queue = $queueStorage->load('os2forms_digital_post');
     $job = Job::create(SendDigitalPost::class, [
       'formId' => $webform_submission->getWebform()->id(),
       'submissionId' => $webform_submission->id(),

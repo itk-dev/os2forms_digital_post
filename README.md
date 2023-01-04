@@ -53,7 +53,33 @@ drush --uri=$(itkdev-docker-compose url) os2forms_digital_post:digital-post:send
 drush --uri=$(itkdev-docker-compose url) os2forms_digital_post:digital-post:memo-show --help
 ```
 
+## Queue
+
+Digital post is sent via jobs via an [Advanced
+Queue](https://www.drupal.org/project/advancedqueue) called
+`os2forms_digital_post`.
+
+The queue is processed via [Drupal's cron
+run](https://www.drupal.org/docs/administering-a-drupal-site/cron-automated-tasks/cron-automated-tasks-overview),
+but you can manually process the queue with `drush` if you want to process it
+more often than other Drupal cron jobs:
+
+```sh
+drush advancedqueue:queue:process os2forms_digital_post
+```
+
+List the queue (and all other queues) with
+
+```sh
+drush advancedqueue:queue:list
+```
+
+or go to `/admin/config/system/queues/jobs/os2forms_digital_post` for a
+graphical overview of jobs in the queue.
+
 --------------------------------------------------------------------------------
+
+# Obsolete documentation
 
 Add the following configuration:
 
