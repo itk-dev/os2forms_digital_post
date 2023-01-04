@@ -74,7 +74,7 @@ final class CommandsSF1601 extends DrushCommands {
   ]) {
     [$submission, $handlerSettings, $submissionData] = $this->getData($submissionId, $handlerId, $options);
 
-    $this->webformHelper->sendDigitalPost($submission->id(), $handlerSettings, $submissionData);
+    $this->webformHelper->sendDigitalPost($submission, $handlerSettings, $submissionData);
   }
 
   /**

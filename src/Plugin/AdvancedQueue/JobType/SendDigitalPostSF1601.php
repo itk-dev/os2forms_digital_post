@@ -53,19 +53,10 @@ final class SendDigitalPostSF1601 extends JobTypeBase implements ContainerFactor
   }
 
   /**
-   * Processes the send digital post job.
+   * {@inheritdoc}
    */
   public function process(Job $job): JobResult {
-    $payload = $job->getPayload();
-
-    try {
-      $this->helper->sendDigitalPost($payload['submissionId'], $payload['handlerConfiguration']);
-
-      return JobResult::success();
-    }
-    catch (\Exception $e) {
-      return JobResult::failure($e->getMessage());
-    }
+    return $this->helper->processJob($job);
   }
 
 }

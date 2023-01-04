@@ -2,9 +2,8 @@
 
 namespace Drupal\os2forms_digital_post\Plugin\WebformHandler;
 
-use Drupal\advancedqueue\Job;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\os2forms_digital_post\Plugin\AdvancedQueue\JobType\SendDigitalPostSF1601;
+use Drupal\os2forms_digital_post\Helper\WebformHelperSF1601;
 use Drupal\webform\Plugin\WebformHandlerBase;
 use Drupal\webform\WebformSubmissionInterface;
 use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
@@ -79,6 +78,13 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   protected $cprService;
 
   /**
+   * The webform helper.
+   *
+   * @var \Drupal\os2forms_digital_post\Helper\WebformHelperSF1601
+   */
+  protected WebformHelperSF1601 $helper;
+
+  /**
    * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -94,6 +100,7 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
     $instance->templateManager = $container->get('os2forms_digital_post.template_manager');
     $instance->printServiceConsumer = $container->get('os2forms_digital_post.print_service_consumer');
     $instance->cprService = $container->get('os2forms_cpr_lookup.service');
+    $instance->helper = $container->get(WebformHelperSF1601::class);
 
     $instance->setConfiguration($configuration);
 
@@ -331,16 +338,7 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
    * {@inheritdoc}
    */
   public function postSave(WebformSubmissionInterface $webformSubmission, $update = TRUE) {
-    $queueStorage = $this->entityTypeManager->getStorage('advancedqueue_queue');
-    // @todo Add a module setting for which queue to use.
-    /** @var \Drupal\advancedqueue\Entity\Queue $queue */
-    $queue = $queueStorage->load('os2forms_digital_post');
-    $job = Job::create(SendDigitalPostSF1601::class, [
-      'formId' => $webformSubmission->getWebform()->id(),
-      'submissionId' => $webformSubmission->id(),
-      'handlerConfiguration' => $this->configuration,
-    ]);
-    $queue->enqueueJob($job);
+    $this->helper->createJob($webformSubmission, $this->configuration);
   }
 
   /**

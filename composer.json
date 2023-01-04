@@ -41,7 +41,8 @@
         "wsdltophp/packagebase": "^5.0",
         "dompdf/dompdf": "~0.8.0",
         "os2forms/os2forms": "^3.0",
-        "itk-dev/os2forms_cpr_lookup": "^1.6"
+        "itk-dev/os2forms_cpr_lookup": "^1.6",
+        "drupal/webform": "^6.0"
     },
     "autoload": {
         "psr-4": {
