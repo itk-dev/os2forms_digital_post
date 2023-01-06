@@ -3,6 +3,30 @@
 Send Digital Post to danish citizens from a webform.
 This module use the [SF1600](https://digitaliseringskataloget.dk/integration/sf1600) service from Serviceplatformen. Information and documentation can be obtained by following that link.
 
+## Beskedfordeler endpoint
+
+This module provides an endpoint,
+`/os2forms_digital_post/PostStatusBeskedModtag`, for
+“[PostStatusBeskedModtag](https://digitaliseringskataloget.dk/integration/sf1601)”
+to get information on how or why not a digital post has been delivered. See
+“PostStatusBeskedHent” on
+<https://digitaliseringskataloget.dk/integration/sf1601> for some details.
+
+A certificate is required for the endpoint:
+
+```sh
+# Generate a key
+openssl genrsa -aes256 -out $(hostname).os2forms_digital_post.key.pem
+# Generate a certificate from the key
+openssl req -new -x509 -key $(hostname).os2forms_digital_post.key.pem -out $(hostname).os2forms_digital_post.cert.pem -days 1095
+```
+
+You can pass subjects values on the command line, e.g.:
+
+```sh
+openssl req -new -x509 -key $(hostname).os2forms_digital_post.key.pem -out $(hostname).os2forms_digital_post.cert.pem -days 1095 -subj "/C=DK/L=Aarhus/O=os2forms_digital_post/CN=$(hostname).os2forms_digital_post/emailAddress=os2forms_digital_post@example.com"
+```
+
 ## Installation
 
 Require it with composer:
