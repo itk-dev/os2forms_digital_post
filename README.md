@@ -1,7 +1,11 @@
 # OS2Forms Digital Post
 
 Send Digital Post to danish citizens from a webform.
-This module use the [SF1600](https://digitaliseringskataloget.dk/integration/sf1600) service from Serviceplatformen. Information and documentation can be obtained by following that link.
+
+This module uses the
+[SF1600](https://digitaliseringskataloget.dk/integration/sf1600) service from
+Serviceplatformen. Information and documentation can be obtained by following
+that link.
 
 ## Beskedfordeler endpoint
 
@@ -10,22 +14,7 @@ This module provides an endpoint,
 “[PostStatusBeskedModtag](https://digitaliseringskataloget.dk/integration/sf1601)”
 to get information on how or why not a digital post has been delivered. See
 “PostStatusBeskedHent” on
-<https://digitaliseringskataloget.dk/integration/sf1601> for some details.
-
-A certificate is required for the endpoint:
-
-```sh
-# Generate a key
-openssl genrsa -aes256 -out $(hostname).os2forms_digital_post.key.pem
-# Generate a certificate from the key
-openssl req -new -x509 -key $(hostname).os2forms_digital_post.key.pem -out $(hostname).os2forms_digital_post.cert.pem -days 1095
-```
-
-You can pass subjects values on the command line, e.g.:
-
-```sh
-openssl req -new -x509 -key $(hostname).os2forms_digital_post.key.pem -out $(hostname).os2forms_digital_post.cert.pem -days 1095 -subj "/C=DK/L=Aarhus/O=os2forms_digital_post/CN=$(hostname).os2forms_digital_post/emailAddress=os2forms_digital_post@example.com"
-```
+<https://digitaliseringskataloget.dk/integration/sf1601> for details.
 
 ## Installation
 
@@ -43,7 +32,8 @@ drush pm:enable os2forms_digital_post
 
 ## Configuration
 
-Go to `/admin/os2forms_digital_post/settings` to set up global settings for digital post.
+Go to `/admin/os2forms_digital_post/settings` to set up global settings for
+digital post.
 
 ## Drush commands
 
@@ -79,6 +69,11 @@ graphical overview of jobs in the queue.
 
 --------------------------------------------------------------------------------
 
+<!-- markdownlint-disable MD013 -->
+<!-- markdownlint-disable MD022 -->
+<!-- markdownlint-disable MD025 -->
+<!-- markdownlint-disable MD031 -->
+<!-- markdownlint-disable MD032 -->
 # Obsolete documentation
 
 Add the following configuration:
@@ -142,20 +137,40 @@ it will send the submitted data as digital post.
 This module provides functionality for querying the danish CPR register and
 showing the result in webforms.
 
+<!-- markdownlint-enable MD013 -->
+<!-- markdownlint-enable MD022 -->
+<!-- markdownlint-enable MD025 -->
+<!-- markdownlint-enable MD031 -->
+<!-- markdownlint-enable MD032 -->
 ## Coding standards
 
-Check coding standards (run `composer install` to install the required tools):
+All coding standards are checked with [GitHub
+Actions](https://github.com/features/actions) when a pull request is made (cf.
+<.github/workflows/pr.yaml>).
 
-```shell
-composer coding-standards-check
+Check coding standards:
+
+```sh
+docker run --rm --interactive --tty --volume ${PWD}:/app itkdev/php7.4-fpm:latest composer install
+docker run --rm --interactive --tty --volume ${PWD}:/app itkdev/php7.4-fpm:latest composer coding-standards-check
+
+docker run --rm --interactive --tty --volume ${PWD}:/app node:18 yarn --cwd /app install
+docker run --rm --interactive --tty --volume ${PWD}:/app node:18 yarn --cwd /app coding-standards-check
 ```
 
 Apply coding standards:
 
 ```shell
-composer coding-standards-apply
+docker run --rm --interactive --tty --volume ${PWD}:/app itkdev/php7.4-fpm:latest composer coding-standards-apply
+
+docker run --rm --interactive --tty --volume ${PWD}:/app node:18 yarn --cwd /app coding-standards-apply
 ```
 
+<!-- markdownlint-disable MD013 -->
+<!-- markdownlint-disable MD022 -->
+<!-- markdownlint-disable MD025 -->
+<!-- markdownlint-disable MD031 -->
+<!-- markdownlint-disable MD032 -->
 ## Drush command
 
 A drush command is available for testing purposes. It creates a PDF from a template and a given submission.
