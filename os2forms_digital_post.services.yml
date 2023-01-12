@@ -16,3 +16,5 @@ services:
       - "@os2forms_digital_post.print_service_consumer"
       - "@os2forms_digital_post.template_manager"
       - "@logger.factory"
+
+  Drupal\os2forms_digital_post\Helper\SF1461Helper:
