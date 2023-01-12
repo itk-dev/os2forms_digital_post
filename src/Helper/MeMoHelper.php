@@ -2,8 +2,12 @@
 
 namespace Drupal\os2forms_digital_post\Helper;
 
+use DataGovDk\Model\Core\Address;
 use DigitalPost\MeMo\Action;
 use DigitalPost\MeMo\AdditionalDocument;
+use DigitalPost\MeMo\AttentionData;
+use DigitalPost\MeMo\AttentionPerson;
+use DigitalPost\MeMo\ContactPoint;
 use DigitalPost\MeMo\EntryPoint;
 use DigitalPost\MeMo\File;
 use DigitalPost\MeMo\MainDocument;
@@ -13,6 +17,7 @@ use DigitalPost\MeMo\MessageHeader;
 use DigitalPost\MeMo\Recipient;
 use DigitalPost\MeMo\Sender;
 use Drupal\Core\Render\ElementInfoManagerInterface;
+use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
 use Drupal\os2forms_digital_post\Exception\InvalidAttachmentElementException;
 use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
@@ -58,7 +63,7 @@ class MeMoHelper {
   /**
    * Build MeMo message.
    */
-  public function buildMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, array $submissionData = []): Message {
+  public function buildMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, array $submissionData = [], CprServiceResult $cprServiceResult = NULL): Message {
     $messageUUID = Serializer::createUuid();
     $messageID = Serializer::createUuid();
 
@@ -73,6 +78,34 @@ class MeMoHelper {
     $recipient = (new Recipient())
       ->setIdType($options[WebformHelperSF1601::RECIPIENT_IDENTIFIER_TYPE])
       ->setRecipientID($options[WebformHelperSF1601::RECIPIENT_IDENTIFIER]);
+
+    if (NULL !== $cprServiceResult) {
+      $name = implode(' ', array_filter([
+        $cprServiceResult->getFirstName(),
+        $cprServiceResult->getMiddleName(),
+        $cprServiceResult->getLastName(),
+      ]));
+
+      $recipient->setLabel($name);
+      $address = (new Address())
+        ->setCo('')
+        ->setAddressLabel($cprServiceResult->getStreetName() ?: '')
+        ->setHouseNumber($cprServiceResult->getHouseNumber() ?: '')
+        ->setFloor($cprServiceResult->getFloor() ?: '')
+        ->setDoor($cprServiceResult->getSide() ?: '')
+        ->setZipCode($cprServiceResult->getPostalCode() ?: '')
+        ->setCity($cprServiceResult->getCity() ?: '')
+        ->setCountry('DA')
+      ;
+      $attentionData = (new AttentionData())
+        ->setAttentionPerson((new AttentionPerson())
+          ->setLabel($recipient->getLabel())
+          ->setPersonID($options['recipient-id'])
+        )
+        ->setAddress($address);
+
+      $recipient->setAttentionData($attentionData);
+    }
 
     $label = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
     $messageHeader = (new MessageHeader())

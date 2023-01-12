@@ -156,8 +156,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     }
 
     // Validate recipient identifier.
-    // @todo Use this for building physical post address.
-    $this->cprService->search($recipientIdentifier);
+    $cprServiceResult = $this->cprService->search($recipientIdentifier);
 
     $senderSettings = $this->settings->get('sender');
     $messageOptions = [
@@ -170,7 +169,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
       WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
-    $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings, $submissionData);
+    $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings, $submissionData, $cprServiceResult);
 
     $options = [
       'test_mode' => (bool) $this->settings->get('test_mode'),
