@@ -26,7 +26,6 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   public const MEMO_MESSAGE = 'memo_message';
   public const MEMO_ACTIONS = 'memo_actions';
   public const TYPE = 'type';
-  public const MESSAGE_TYPE = 'message_type';
   public const SENDER_LABEL = 'sender_label';
   public const MESSAGE_HEADER_LABEL = 'message_header_label';
   public const RECIPIENT_ELEMENT = 'recipient_element';
@@ -135,17 +134,6 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
         SF1601::TYPE_FYSISK_POST => SF1601::TYPE_FYSISK_POST,
       ],
       '#default_value' => $this->configuration[self::MEMO_MESSAGE][self::TYPE] ?? SF1601::TYPE_AUTOMATISK_VALG,
-    ];
-
-    $form[self::MEMO_MESSAGE][self::MESSAGE_TYPE] = [
-      '#type' => 'select',
-      '#title' => $this->t('Message type'),
-      '#required' => TRUE,
-      '#options' => [
-        SF1601::MESSAGE_TYPE_DIGITAL_POST => SF1601::MESSAGE_TYPE_DIGITAL_POST,
-        SF1601::MESSAGE_TYPE_NEM_SMS => SF1601::MESSAGE_TYPE_NEM_SMS,
-      ],
-      '#default_value' => $this->configuration[self::MEMO_MESSAGE][self::MESSAGE_TYPE] ?? SF1601::MESSAGE_TYPE_DIGITAL_POST,
     ];
 
     $availableElements = $this->getRecipientElements();

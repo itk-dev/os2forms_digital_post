@@ -7,7 +7,6 @@ use DigitalPost\MeMo\Action;
 use DigitalPost\MeMo\AdditionalDocument;
 use DigitalPost\MeMo\AttentionData;
 use DigitalPost\MeMo\AttentionPerson;
-use DigitalPost\MeMo\ContactPoint;
 use DigitalPost\MeMo\EntryPoint;
 use DigitalPost\MeMo\File;
 use DigitalPost\MeMo\MainDocument;
@@ -95,8 +94,7 @@ class MeMoHelper {
         ->setDoor($cprServiceResult->getSide() ?: '')
         ->setZipCode($cprServiceResult->getPostalCode() ?: '')
         ->setCity($cprServiceResult->getCity() ?: '')
-        ->setCountry('DA')
-      ;
+        ->setCountry('DA');
       $attentionData = (new AttentionData())
         ->setAttentionPerson((new AttentionPerson())
           ->setLabel($recipient->getLabel())
@@ -109,7 +107,7 @@ class MeMoHelper {
 
     $label = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
     $messageHeader = (new MessageHeader())
-      ->setMessageType($options[WebformHandlerSF1601::MESSAGE_TYPE] ?? SF1601::MESSAGE_TYPE_DIGITAL_POST)
+      ->setMessageType(SF1601::MESSAGE_TYPE_DIGITAL_POST)
       ->setMessageUUID($messageUUID)
       ->setMessageID($messageID)
       ->setLabel($label)

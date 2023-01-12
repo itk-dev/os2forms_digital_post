@@ -178,10 +178,10 @@ final class SettingsForm extends FormBase {
       '#type' => 'fieldset',
       '#title' => $this->t('Processing'),
       '#tree' => TRUE,
-];
+    ];
 
     $defaultValue = $defaultValues['processing']['queue'] ?? 'os2forms_digital_post';
-    $form['processing'][      'queue'] = [
+    $form['processing']['queue'] = [
       '#type' => 'select',
       '#title' => $this->t('Queue'),
       '#options' => array_map(static function (QueueInterface $queue) {
