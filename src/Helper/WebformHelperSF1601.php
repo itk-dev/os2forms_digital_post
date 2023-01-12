@@ -202,9 +202,10 @@ final class WebformHelperSF1601 implements LoggerInterface {
   /**
    * Load queue.
    */
-  public function loadQueue():QueueInterface {
-    // @todo Add a module setting for which queue to use.
-    return $this->queueStorage->load('os2forms_digital_post');
+  private function loadQueue():QueueInterface {
+    $processingSettings = $this->settings->get('processing');
+
+    return $this->queueStorage->load($processingSettings['queue'] ?? 'os2forms_digital_post');
   }
 
   /**

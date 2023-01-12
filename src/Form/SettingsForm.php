@@ -2,12 +2,15 @@
 
 namespace Drupal\os2forms_digital_post\Form;
 
+use Drupal\advancedqueue\Entity\QueueInterface;
+use Drupal\Core\Config\Entity\ConfigEntityStorage;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\os2forms_digital_post\Helper\CertificateLocatorHelper;
-use Drupal\os2forms_digital_post\Helper\SettingsInterface;
 use Drupal\os2forms_digital_post\Helper\Settings;
+use Drupal\os2forms_digital_post\Helper\SettingsInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -27,6 +30,13 @@ final class SettingsForm extends FormBase {
   private SettingsInterface $settings;
 
   /**
+   * The queue storage.
+   *
+   * @var \Drupal\Core\Config\Entity\ConfigEntityStorage|\Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected ConfigEntityStorage $queueStorage;
+
+  /**
    * The certificate locator helper.
    *
    * @var \Drupal\os2forms_digital_post\Helper\CertificateLocatorHelper
@@ -36,8 +46,10 @@ final class SettingsForm extends FormBase {
   /**
    * Constructor.
    */
-  public function __construct(SettingsInterface $settings, CertificateLocatorHelper $certificateLocatorHelper) {
+  public function __construct(SettingsInterface $settings, EntityTypeManagerInterface $entityTypeManager, CertificateLocatorHelper $certificateLocatorHelper) {
     $this->settings = $settings;
+    $this->queueStorage = $entityTypeManager->getStorage('advancedqueue_queue');
+
     $this->certificateLocatorHelper = $certificateLocatorHelper;
   }
 
@@ -47,6 +59,7 @@ final class SettingsForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get(Settings::class),
+      $container->get('entity_type.manager'),
       $container->get(CertificateLocatorHelper::class)
     );
   }
@@ -159,6 +172,26 @@ final class SettingsForm extends FormBase {
       '#type' => 'textfield',
       '#title' => $this->t('Passphrase'),
       '#default_value' => $defaultValues['certificate']['passphrase'] ?? NULL,
+    ];
+
+    $form['processing'] = [
+      '#type' => 'fieldset',
+      '#title' => $this->t('Processing'),
+      '#tree' => TRUE,
+];
+
+    $defaultValue = $defaultValues['processing']['queue'] ?? 'os2forms_digital_post';
+    $form['processing'][      'queue'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Queue'),
+      '#options' => array_map(static function (QueueInterface $queue) {
+        return $queue->label();
+      }, $this->queueStorage->loadMultiple()
+      ),
+      '#default_value' => $defaultValue,
+      '#description' => $this->t("Queue for digital post jobs. The queue must be run via Drupal's cron or via <code>drush advancedqueue:queue:process @queue</code>(in a cron job).", [
+        '@queue' => $defaultValue,
+      ]),
     ];
 
     $form['actions']['#type'] = 'actions';

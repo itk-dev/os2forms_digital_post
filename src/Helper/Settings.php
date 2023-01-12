@@ -32,6 +32,7 @@ final class Settings implements SettingsInterface {
     'test_mode',
     'sender',
     'certificate',
+    'processing',
   ];
 
   /**
