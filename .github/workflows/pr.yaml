@@ -124,7 +124,6 @@ jobs:
   #         # Add repositories from our composer.json (which see).
   #         # @see https://getcomposer.org/doc/03-cli.md#modifying-repositories
   #         composer --working-dir=drupal --no-interaction config repositories.drupal/webform_embed "$(composer config repositories.drupal/webform_embed)"
-  #         composer --working-dir=drupal --no-interaction config repositories.drupal/webform_permissions_by_term "$(composer config repositories.drupal/webform_permissions_by_term)"
 
   #         # Allow plugins
   #         composer --working-dir=drupal config --no-plugins allow-plugins.vaimo/composer-patches true
