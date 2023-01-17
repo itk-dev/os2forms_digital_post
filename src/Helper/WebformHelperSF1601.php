@@ -11,12 +11,14 @@ use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
 use Drupal\os2forms_digital_post\Exception\InvalidRecipientIdentifierElementException;
+use Drupal\os2forms_digital_post\Exception\RuntimeException;
 use Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException;
 use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\AdvancedQueue\JobType\SendDigitalPostSF1601;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformSubmissionStorageInterface;
+use ItkDev\Serviceplatformen\Service\Exception\ServiceException;
 use ItkDev\Serviceplatformen\Service\SF1601\Serializer;
 use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
 use Psr\Log\LoggerInterface;
@@ -155,8 +157,13 @@ final class WebformHelperSF1601 implements LoggerInterface {
         $message));
     }
 
-    // Validate recipient identifier.
-    $cprServiceResult = $this->cprService->search($recipientIdentifier);
+    try {
+      // Validate recipient identifier.
+      $cprServiceResult = $this->cprService->search($recipientIdentifier);
+    }
+    catch (ServiceException $serviceException) {
+      throw new RuntimeException(sprintf('Cannot validate recepient identifier (%s:%s)', $recipientIdentifierType, $recipientIdentifier));
+    }
 
     $senderSettings = $this->settings->get('sender');
     $messageOptions = [
@@ -275,9 +282,19 @@ final class WebformHelperSF1601 implements LoggerInterface {
 
       $this->sendDigitalPost($submission, $payload['handlerConfiguration']);
 
+      $this->notice('Digital post sent', [
+        'operation' => 'digital post send',
+        'webform_submission' => $submission ?? NULL,
+      ]);
+
       return JobResult::success();
     }
     catch (\Exception $e) {
+      $this->error($e->getMessage(), [
+        'operation' => 'digital post send',
+        'webform_submission' => $submission ?? NULL,
+      ]);
+
       return JobResult::failure($e->getMessage());
     }
   }

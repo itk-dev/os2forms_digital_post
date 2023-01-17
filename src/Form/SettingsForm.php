@@ -189,8 +189,9 @@ final class SettingsForm extends FormBase {
       }, $this->queueStorage->loadMultiple()
       ),
       '#default_value' => $defaultValue,
-      '#description' => $this->t("Queue for digital post jobs. The queue must be run via Drupal's cron or via <code>drush advancedqueue:queue:process @queue</code>(in a cron job).", [
+      '#description' => $this->t("Queue for digital post jobs. <a href=':queue_url'>The queue</a> must be run via Drupal's cron or via <code>drush advancedqueue:queue:process @queue</code>(in a cron job).", [
         '@queue' => $defaultValue,
+        ':queue_url' => '/admin/config/system/queues/jobs/' . urlencode($defaultValue),
       ]),
     ];
 
