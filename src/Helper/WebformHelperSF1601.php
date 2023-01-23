@@ -283,6 +283,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
       $this->sendDigitalPost($submission, $payload['handlerConfiguration']);
 
       $this->notice('Digital post sent', [
+        'handler_id' => 'os2forms_digital_post',
         'operation' => 'digital post send',
         'webform_submission' => $submission ?? NULL,
       ]);
@@ -291,6 +292,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     }
     catch (\Exception $e) {
       $this->error($e->getMessage(), [
+        'handler_id' => 'os2forms_digital_post',
         'operation' => 'digital post send',
         'webform_submission' => $submission ?? NULL,
       ]);
