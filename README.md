@@ -30,6 +30,11 @@ Enable it with drush:
 drush pm:enable os2forms_digital_post
 ```
 
+### Example forms
+
+See [OS2Forms Digital Post
+examples](modules/os2forms_digital_post_examples/README.md).
+
 ## Configuration
 
 Go to `/admin/os2forms_digital_post/settings` to set up global settings for
