@@ -2,96 +2,114 @@
 
 namespace Drupal\os2forms_digital_post\Helper;
 
-use Drupal\Core\State\StateInterface;
+use Drupal\Core\KeyValueStore\KeyValueFactoryInterface;
+use Drupal\Core\KeyValueStore\KeyValueStoreInterface;
 use Drupal\os2forms_digital_post\Exception\InvalidSettingException;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 
 /**
  * General settings for os2forms_digital_post.
  */
-final class Settings implements SettingsInterface {
+final class Settings {
   /**
-   * The state.
+   * The store.
    *
-   * @var \Drupal\Core\State\StateInterface
+   * @var \Drupal\Core\KeyValueStore\KeyValueStoreInterface
    */
-  private StateInterface $state;
+  private KeyValueStoreInterface $store;
 
   /**
    * The key prefix.
    *
    * @var string
    */
-  private $keyPrefix = 'os2forms_digital_post.';
+  private $collection = 'os2forms_digital_post.';
 
   /**
-   * The setting keys.
+   * Constructor.
+   */
+  public function __construct(KeyValueFactoryInterface $keyValueFactory) {
+    $this->store = $keyValueFactory->get($this->collection);
+  }
+
+  /**
+   * Get test mode.
+   */
+  public function getTestMode(): bool {
+    return (bool) $this->get('test_mode', TRUE);
+  }
+
+  /**
+   * Get sender.
+   */
+  public function getSender(): array {
+    $value = $this->get('sender');
+    return is_array($value) ? $value : [];
+  }
+
+  /**
+   * Get certificate.
+   */
+  public function getCertificate(): array {
+    $value = $this->get('certificate');
+    return is_array($value) ? $value : [];
+  }
+
+  /**
+   * Get processing.
+   */
+  public function getProcessing(): array {
+    $value = $this->get('processing');
+    return is_array($value) ? $value : [];
+  }
+
+  /**
+   * Get a setting value.
    *
-   * @var array|string[]
+   * @param string $key
+   *   The key.
+   * @param mixed|null $default
+   *   The default value.
+   *
+   * @return mixed
+   *   The setting value.
    */
-  private array $keys = [
-    'test_mode',
-    'sender',
-    'certificate',
-    'processing',
-  ];
-
-  /**
-   * {@inheritdoc}
-   */
-  public function __construct(StateInterface $state) {
-    $this->state = $state;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getAll(): array {
-    $values = $this->state->getMultiple(array_map([$this, 'buildKey'], $this->keys));
-
-    $vals = [];
-    foreach ($values as $key => $value) {
-      $vals[$this->unbuildKey($key)] = $value;
+  private function get(string $key, $default = NULL) {
+    $resolver = $this->getSettingsResolver();
+    if (!$resolver->isDefined($key)) {
+      throw new InvalidSettingException(sprintf('Setting %s is not defined', $key));
     }
 
-    return $vals;
+    return $this->store->get($key, $default);
   }
 
   /**
-   * {@inheritdoc}
+   * Set settings.
+   *
+   * @throws \Symfony\Component\OptionsResolver\Exception\ExceptionInterface
+   *
+   * @phpstan-param array<string, mixed> $settings
    */
-  public function getKeys(): array {
-    return $this->keys;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function get(string $key, $default = NULL) {
-    return $this->state->get($this->buildKey($key), $default);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function set(string $key, $value) {
-    $this->state->set($this->buildKey($key), $value);
-  }
-
-  /**
-   * Build key.
-   */
-  private function buildKey(string $key) {
-    if (!in_array($key, $this->keys, TRUE)) {
-      throw new InvalidSettingException(sprintf('Invalid setting: %s', $key));
+  public function setSettings(array $settings): self {
+    $settings = $this->getSettingsResolver()->resolve($settings);
+    foreach ($settings as $key => $value) {
+      $this->store->set($key, $value);
     }
-    return $this->keyPrefix . $key;
+
+    return $this;
   }
 
   /**
-   * Unbuild key.
+   * Get settings resolver.
    */
-  private function unbuildKey(string $key) {
-    return 0 === strpos($key, $this->keyPrefix) ? substr($key, strlen($this->keyPrefix)) : $key;
+  private function getSettingsResolver(): OptionsResolver {
+    return (new OptionsResolver())
+      ->setDefaults([
+        'test_mode' => TRUE,
+        'sender' => [],
+        'certificate' => [],
+        'processing' => [],
+      ]);
   }
 
 }

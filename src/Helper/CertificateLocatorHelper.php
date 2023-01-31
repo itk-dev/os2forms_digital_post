@@ -24,12 +24,12 @@ class CertificateLocatorHelper {
    *
    * @var \Drupal\os2forms_digital_post\SettingsInterface|Settings
    */
-  private SettingsInterface $settings;
+  private Settings $settings;
 
   /**
    * {@inheritdoc}
    */
-  public function __construct(SettingsInterface $settings) {
+  public function __construct(Settings $settings) {
     $this->settings = $settings;
   }
 
@@ -37,7 +37,7 @@ class CertificateLocatorHelper {
    * Get certificate locator.
    */
   public function getCertificateLocator(): CertificateLocatorInterface {
-    $certificateSettings = $this->settings->get('certificate');
+    $certificateSettings = $this->settings->getCertificate();
 
     $locatorType = $certificateSettings['locator_type'];
     $options = $certificateSettings[$locatorType];

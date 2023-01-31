@@ -38,7 +38,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
    *
    * @var \Drupal\os2forms_digital_post\SettingsInterface|Settings
    */
-  private SettingsInterface $settings;
+  private Settings $settings;
 
   /**
    * The certificate locator helper.
@@ -93,7 +93,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
    * Constructor.
    */
   public function __construct(
-    SettingsInterface $settings,
+    Settings $settings,
     CertificateLocatorHelper $certificateLocatorHelper,
     EntityTypeManagerInterface $entityTypeManager,
     CprServiceInterface $cprService,
@@ -165,7 +165,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
       throw new RuntimeException(sprintf('Cannot validate recepient identifier (%s:%s)', $recipientIdentifierType, $recipientIdentifier));
     }
 
-    $senderSettings = $this->settings->get('sender');
+    $senderSettings = $this->settings->getSender();
     $messageOptions = [
       self::RECIPIENT_IDENTIFIER_TYPE => $recipientIdentifierType,
       self::RECIPIENT_IDENTIFIER => $recipientIdentifier,
@@ -179,7 +179,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings, $submissionData, $cprServiceResult);
 
     $options = [
-      'test_mode' => (bool) $this->settings->get('test_mode'),
+      'test_mode' => (bool) $this->settings->getTestMode(),
       'authority_cvr' => $senderSettings[SettingsForm::SENDER_IDENTIFIER],
       'certificate_locator' => $this->certificateLocatorHelper->getCertificateLocator(),
     ];
@@ -209,7 +209,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
    * Load queue.
    */
   private function loadQueue():QueueInterface {
-    $processingSettings = $this->settings->get('processing');
+    $processingSettings = $this->settings->getProcessing();
 
     return $this->queueStorage->load($processingSettings['queue'] ?? 'os2forms_digital_post');
   }

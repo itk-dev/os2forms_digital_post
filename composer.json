@@ -35,15 +35,16 @@
     "prefer-stable": true,
     "require": {
         "ext-soap": "*",
-        "itk-dev/serviceplatformen": "^1.2",
-        "php-http/guzzle6-adapter": "^2.0.1",
-        "http-interop/http-factory-guzzle": "^1.0.0",
-        "symfony/property-access": "^4.4",
-        "wsdltophp/packagebase": "^5.0",
         "dompdf/dompdf": "~0.8.0",
-        "os2forms/os2forms": "^3.0",
+        "drupal/webform": "^6.0",
+        "http-interop/http-factory-guzzle": "^1.0.0",
         "itk-dev/os2forms_cpr_lookup": "^1.6",
-        "drupal/webform": "^6.0"
+        "itk-dev/serviceplatformen": "^1.2",
+        "os2forms/os2forms": "^3.0",
+        "php-http/guzzle6-adapter": "^2.0.1",
+        "symfony/options-resolver": "^5.4 || ^6.0",
+        "symfony/property-access": "^4.4",
+        "wsdltophp/packagebase": "^5.0"
     },
     "autoload": {
         "psr-4": {
@@ -79,6 +80,7 @@
         ]
     },
     "config": {
+        "sort-packages": true,
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "vaimo/composer-patches": true

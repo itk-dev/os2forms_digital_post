@@ -19,7 +19,7 @@ services:
 
   Drupal\os2forms_digital_post\Helper\Settings:
     arguments:
-      - "@state"
+      - "@keyvalue"
 
   Drupal\os2forms_digital_post\Helper\CertificateLocatorHelper:
     arguments:

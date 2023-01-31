@@ -10,8 +10,8 @@ use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Drupal\os2forms_digital_post\Helper\CertificateLocatorHelper;
 use Drupal\os2forms_digital_post\Helper\Settings;
-use Drupal\os2forms_digital_post\Helper\SettingsInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\OptionsResolver\Exception\ExceptionInterface as OptionsResolverException;
 
 /**
  * Digital post settings form.
@@ -27,7 +27,7 @@ final class SettingsForm extends FormBase {
    *
    * @var \Drupal\os2forms_digital_post\Helper\Settings
    */
-  private SettingsInterface $settings;
+  private Settings $settings;
 
   /**
    * The queue storage.
@@ -46,7 +46,7 @@ final class SettingsForm extends FormBase {
   /**
    * Constructor.
    */
-  public function __construct(SettingsInterface $settings, EntityTypeManagerInterface $entityTypeManager, CertificateLocatorHelper $certificateLocatorHelper) {
+  public function __construct(Settings $settings, EntityTypeManagerInterface $entityTypeManager, CertificateLocatorHelper $certificateLocatorHelper) {
     $this->settings = $settings;
     $this->queueStorage = $entityTypeManager->getStorage('advancedqueue_queue');
 
@@ -75,14 +75,13 @@ final class SettingsForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
-    $defaultValues = $this->settings->getAll();
-
     $form['test_mode'] = [
       '#type' => 'checkbox',
       '#title' => $this->t('Test mode'),
-      '#default_value' => $defaultValues['test_mode'] ?? TRUE,
+      '#default_value' => $this->settings->getTestMode(),
     ];
 
+    $sender = $this->settings->getSender();
     $form['sender'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Sender'),
@@ -94,18 +93,19 @@ final class SettingsForm extends FormBase {
         '#options' => [
           'CVR' => $this->t('CVR'),
         ],
-        '#default_value' => $defaultValues['sender'][self::SENDER_IDENTIFIER_TYPE] ?? 'CVR',
+        '#default_value' => $sender[self::SENDER_IDENTIFIER_TYPE] ?? 'CVR',
         '#required' => TRUE,
       ],
 
       self::SENDER_IDENTIFIER => [
         '#type' => 'textfield',
         '#title' => $this->t('Identifier'),
-        '#default_value' => $defaultValues['sender'][self::SENDER_IDENTIFIER] ?? NULL,
+        '#default_value' => $sender[self::SENDER_IDENTIFIER] ?? NULL,
         '#required' => TRUE,
       ],
     ];
 
+    $certificate = $this->settings->getCertificate();
     $form['certificate'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Certificate'),
@@ -118,7 +118,7 @@ final class SettingsForm extends FormBase {
           'azure_key_vault' => $this->t('Azure key vault'),
           'file_system' => $this->t('File system'),
         ],
-        '#default_value' => $defaultValues['certificate']['locator_type'] ?? NULL,
+        '#default_value' => $certificate['locator_type'] ?? NULL,
       ],
     ];
 
@@ -144,7 +144,7 @@ final class SettingsForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $info['title'],
         '#description' => $info['description'] ?? NULL,
-        '#default_value' => $defaultValues['certificate'][CertificateLocatorHelper::LOCATOR_TYPE_AZURE_KEY_VAULT][$key] ?? NULL,
+        '#default_value' => $certificate[CertificateLocatorHelper::LOCATOR_TYPE_AZURE_KEY_VAULT][$key] ?? NULL,
         '#states' => [
           'required' => [':input[name="certificate[locator_type]"]' => ['value' => CertificateLocatorHelper::LOCATOR_TYPE_AZURE_KEY_VAULT]],
         ],
@@ -161,7 +161,7 @@ final class SettingsForm extends FormBase {
       'path' => [
         '#type' => 'textfield',
         '#title' => $this->t('Path'),
-        '#default_value' => $defaultValues['certificate'][CertificateLocatorHelper::LOCATOR_TYPE_FILE_SYSTEM]['path'] ?? NULL,
+        '#default_value' => $certificate[CertificateLocatorHelper::LOCATOR_TYPE_FILE_SYSTEM]['path'] ?? NULL,
         '#states' => [
           'required' => [':input[name="certificate[locator_type]"]' => ['value' => CertificateLocatorHelper::LOCATOR_TYPE_FILE_SYSTEM]],
         ],
@@ -171,16 +171,17 @@ final class SettingsForm extends FormBase {
     $form['certificate']['passphrase'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Passphrase'),
-      '#default_value' => $defaultValues['certificate']['passphrase'] ?? NULL,
+      '#default_value' => $certificate['passphrase'] ?? NULL,
     ];
 
+    $processing = $this->settings->getProcessing();
     $form['processing'] = [
       '#type' => 'fieldset',
       '#title' => $this->t('Processing'),
       '#tree' => TRUE,
     ];
 
-    $defaultValue = $defaultValues['processing']['queue'] ?? 'os2forms_digital_post';
+    $defaultValue = $processing['queue'] ?? 'os2forms_digital_post';
     $form['processing']['queue'] = [
       '#type' => 'select',
       '#title' => $this->t('Queue'),
@@ -239,15 +240,17 @@ final class SettingsForm extends FormBase {
       return;
     }
 
-    $values = $formState->getValues();
-    foreach ($this->settings->getKeys() as $key) {
-      if (array_key_exists($key, $values)) {
-        $this->settings->set($key, $values[$key]);
-      }
+    try {
+      $settings['test_mode'] = (bool) $formState->getValue('test_mode');
+      $settings['sender'] = $formState->getValue('sender');
+      $settings['certificate'] = $formState->getValue('certificate');
+      $settings['processing'] = $formState->getValue('processing');
+      $this->settings->setSettings($settings);
+      $this->messenger()->addStatus($this->t('Settings saved'));
     }
-
-    $this->messenger()->addStatus($this->t('Settings saved'));
-
+    catch (OptionsResolverException $exception) {
+      $this->messenger()->addError($this->t('Settings not saved (@message)', ['@message' => $exception->getMessage()]));
+    }
   }
 
   /**
