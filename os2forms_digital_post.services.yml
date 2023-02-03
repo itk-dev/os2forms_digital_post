@@ -16,3 +16,27 @@ services:
       - "@os2forms_digital_post.print_service_consumer"
       - "@os2forms_digital_post.template_manager"
       - "@logger.factory"
+
+  Drupal\os2forms_digital_post\Helper\Settings:
+    arguments:
+      - "@keyvalue"
+
+  Drupal\os2forms_digital_post\Helper\CertificateLocatorHelper:
+    arguments:
+      - "@Drupal\\os2forms_digital_post\\Helper\\Settings"
+
+  Drupal\os2forms_digital_post\Helper\MeMoHelper:
+    arguments:
+      - "@plugin.manager.element_info"
+      - "@webform.token_manager"
+
+  Drupal\os2forms_digital_post\Helper\WebformHelperSF1601:
+    arguments:
+      - "@Drupal\\os2forms_digital_post\\Helper\\Settings"
+      - "@Drupal\\os2forms_digital_post\\Helper\\CertificateLocatorHelper"
+      - "@entity_type.manager"
+      - "@os2forms_cpr_lookup.service"
+      - "@Drupal\\os2forms_digital_post\\Helper\\MeMoHelper"
+      - "@logger.factory"
+
+  Drupal\os2forms_digital_post\Helper\SF1461Helper:

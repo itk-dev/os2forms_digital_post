@@ -16,9 +16,9 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *
  * @WebformHandler(
  *   id = "digital_post",
- *   label = @Translation("Digital Post"),
+ *   label = @Translation("Digital Post (obsolete)"),
  *   category = @Translation("Web services"),
- *   description = @Translation("Sends webform submission as Digital Post."),
+ *   description = @Translation("Sends webform submission as Digital Post (obsolete)."),
  *   cardinality = \Drupal\webform\Plugin\WebformHandlerInterface::CARDINALITY_UNLIMITED,
  *   results = \Drupal\webform\Plugin\WebformHandlerInterface::RESULTS_IGNORED,
  *   submission = \Drupal\webform\Plugin\WebformHandlerInterface::SUBMISSION_REQUIRED,
@@ -315,7 +315,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
   public function postSave(WebformSubmissionInterface $webform_submission, $update = TRUE) {
     $queueStorage = $this->entityTypeManager->getStorage('advancedqueue_queue');
     /** @var \Drupal\advancedqueue\Entity\Queue $queue */
-    $queue = $queueStorage->load('send_digital_post');
+    $queue = $queueStorage->load('os2forms_digital_post');
     $job = Job::create(SendDigitalPost::class, [
       'formId' => $webform_submission->getWebform()->id(),
       'submissionId' => $webform_submission->id(),
