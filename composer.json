@@ -9,8 +9,9 @@
             "email": "lats@aarhus.dk"
         }
     ],
-    "repositories": [
-        {
+    "repositories": {
+        "drupal/webform_embed": {
+            "// ": "Lifted from https://github.com/itk-dev/os2forms_selvbetjening/blob/develop/composer.json, which see",
             "//": "https://git.drupalcode.org/issue/webform_embed-3149360/-/tree/3149360-automated-drupal-9",
             "type": "package",
             "package": {
@@ -25,23 +26,25 @@
                 }
             }
         },
-        {
+        "drupal": {
             "type": "composer",
             "url": "https://packages.drupal.org/8"
         }
-    ],
+    },
     "minimum-stability": "dev",
     "prefer-stable": true,
     "require": {
         "ext-soap": "*",
-        "itk-dev/serviceplatformen": "^1.1",
-        "php-http/guzzle6-adapter": "^2.0.1",
-        "http-interop/http-factory-guzzle": "^1.0.0",
-        "symfony/property-access": "^4.4",
-        "wsdltophp/packagebase": "^5.0",
         "dompdf/dompdf": "~0.8.0",
+        "drupal/webform": "^6.0",
+        "http-interop/http-factory-guzzle": "^1.0.0",
+        "itk-dev/os2forms_cpr_lookup": "^1.6",
+        "itk-dev/serviceplatformen": "^1.2",
         "os2forms/os2forms": "^3.0",
-        "itk-dev/os2forms_cpr_lookup": "^1.6"
+        "php-http/guzzle6-adapter": "^2.0.1",
+        "symfony/options-resolver": "^5.4 || ^6.0",
+        "symfony/property-access": "^4.4",
+        "wsdltophp/packagebase": "^5.0"
     },
     "autoload": {
         "psr-4": {
@@ -51,9 +54,18 @@
     "require-dev": {
         "wsdltophp/packagegenerator": "^4.0",
         "drupal/coder": "^8.3",
-        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1"
+        "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
+        "mglaman/drupal-check": "^1.4",
+        "phpunit/phpunit": "^9.5"
     },
     "scripts": {
+        "code-analysis/drupal-check": [
+            "# @see https://github.com/mglaman/drupal-check/issues/261#issuecomment-1030141772 for details on exclude-dir value",
+            "drupal-check --deprecations --analysis --exclude-dir='vendor,*/Client/*' *.* src"
+        ],
+        "code-analysis": [
+            "@code-analysis/drupal-check"
+        ],
         "coding-standards-check/phpcs": [
             "phpcs --standard=phpcs.xml.dist"
         ],
@@ -68,6 +80,7 @@
         ]
     },
     "config": {
+        "sort-packages": true,
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
             "vaimo/composer-patches": true
