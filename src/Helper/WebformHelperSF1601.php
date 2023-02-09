@@ -162,7 +162,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
       $cprServiceResult = $this->cprService->search($recipientIdentifier);
     }
     catch (ServiceException $serviceException) {
-      throw new RuntimeException(sprintf('Cannot validate recepient identifier (%s:%s)', $recipientIdentifierType, $recipientIdentifier));
+      throw new RuntimeException('Cannot validate recepient identifier');
     }
 
     $senderSettings = $this->settings->getSender();
