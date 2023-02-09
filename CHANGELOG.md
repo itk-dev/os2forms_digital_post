@@ -9,6 +9,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Remove CPR from exception
+
 ## [1.1.0]
 
 ### Added
