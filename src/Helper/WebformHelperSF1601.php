@@ -84,6 +84,13 @@ final class WebformHelperSF1601 implements LoggerInterface {
   protected MeMoHelper $meMoHelper;
 
   /**
+   * The Beskedfordeler helper.
+   *
+   * @var BeskedfordelerHelper
+   */
+  private BeskedfordelerHelper $beskedfordelerHelper;
+
+  /**
    * The logger.
    *
    * @var \Drupal\Core\Logger\LoggerChannelInterface
@@ -107,6 +114,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     CprServiceInterface $cprService,
     CvrServiceInterface $cvrService,
     MeMoHelper $meMoHelper,
+    BeskedfordelerHelper $beskedfordelerHelper,
     LoggerChannelFactoryInterface $loggerChannelFactory
   ) {
     $this->settings = $settings;
@@ -116,6 +124,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     $this->cprService = $cprService;
     $this->cvrService = $cvrService;
     $this->meMoHelper = $meMoHelper;
+    $this->beskedfordelerHelper = $beskedfordelerHelper;
     $this->logger = $loggerChannelFactory->get('os2forms_digital_post');
     $this->submissionLogger = $loggerChannelFactory->get('webform_submission');
   }
@@ -134,10 +143,6 @@ final class WebformHelperSF1601 implements LoggerInterface {
    *   [The response, The MeMo message].
    */
   public function sendDigitalPost(WebformSubmissionInterface $submission, array $handlerSettings, array $submissionData = []): array {
-    $logContext = [
-      'webform_submission' => $submission,
-    ];
-
     $submissionData = $submissionData + $submission->getData();
 
     $handlerMessageSettings = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE];
@@ -213,10 +218,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     $type = $handlerMessageSettings[WebformHandlerSF1601::TYPE] ?? SF1601::TYPE_DIGITAL_POST;
     $response = $service->kombiPostAfsend($transactionId, $type, $message);
 
-    $this->notice('Digital post sent', $logContext + [
-      'handler_id' => 'os2forms_digital_post',
-      'operation' => 'digital post sent',
-    ]);
+    $this->beskedfordelerHelper->saveMessage($message);
 
     return [$response, $service->getLastKombiMeMoMessage()];
   }

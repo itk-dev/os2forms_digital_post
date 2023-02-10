@@ -1,4 +1,8 @@
 services:
+  logger.channel.os2forms_digital_post:
+    parent: logger.channel_base
+    arguments: [ 'os2forms_digital_post' ]
+
   os2forms_digital_post.template_manager:
     class: Drupal\os2forms_digital_post\Manager\TemplateManager
     arguments: ["@config.factory", "@twig", "@twig.loader.filesystem"]
@@ -38,6 +42,19 @@ services:
       - "@os2forms_cpr_lookup.service"
       - "@os2forms_cvr_lookup.service"
       - "@Drupal\\os2forms_digital_post\\Helper\\MeMoHelper"
+      - "@Drupal\\os2forms_digital_post\\Helper\\BeskedfordelerHelper"
       - "@logger.factory"
 
   Drupal\os2forms_digital_post\Helper\SF1461Helper:
+
+  Drupal\os2forms_digital_post\EventSubscriber\BeskedfordelerEventSubscriber:
+    arguments:
+      - '@logger.channel.os2forms_digital_post'
+    tags:
+      - { name: 'event_subscriber' }
+
+  Drupal\os2forms_digital_post\Helper\BeskedfordelerHelper:
+    arguments:
+      - '@database'
+      - '@Drupal\os2forms_digital_post\Helper\MeMoHelper'
+      - '@logger.channel.os2forms_digital_post'
