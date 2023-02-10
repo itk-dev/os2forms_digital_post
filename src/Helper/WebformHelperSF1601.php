@@ -162,7 +162,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
       $cprServiceResult = $this->cprService->search($recipientIdentifier);
     }
     catch (ServiceException $serviceException) {
-      throw new RuntimeException(sprintf('Cannot validate recepient identifier (%s:%s)', $recipientIdentifierType, $recipientIdentifier));
+      throw new RuntimeException('Cannot validate recepient identifier');
     }
 
     $senderSettings = $this->settings->getSender();
@@ -291,7 +291,8 @@ final class WebformHelperSF1601 implements LoggerInterface {
       return JobResult::success();
     }
     catch (\Exception $e) {
-      $this->error($e->getMessage(), [
+      $this->error('Error: @message', [
+        '@message' => $e->getMessage(),
         'handler_id' => 'os2forms_digital_post',
         'operation' => 'digital post send',
         'webform_submission' => $submission ?? NULL,
