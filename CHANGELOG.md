@@ -12,6 +12,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Changed
 
 - Added more recipient field types
+- Fixed error logging.
 
 ## [1.1.0]
 

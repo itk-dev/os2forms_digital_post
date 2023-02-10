@@ -291,7 +291,8 @@ final class WebformHelperSF1601 implements LoggerInterface {
       return JobResult::success();
     }
     catch (\Exception $e) {
-      $this->error($e->getMessage(), [
+      $this->error('Error: @message', [
+        '@message' => $e->getMessage(),
         'handler_id' => 'os2forms_digital_post',
         'operation' => 'digital post send',
         'webform_submission' => $submission ?? NULL,
