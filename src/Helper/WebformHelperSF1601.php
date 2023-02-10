@@ -188,12 +188,10 @@ final class WebformHelperSF1601 implements LoggerInterface {
     $type = $handlerMessageSettings[WebformHandlerSF1601::TYPE] ?? SF1601::TYPE_DIGITAL_POST;
     $response = $service->kombiPostAfsend($transactionId, $type, $message);
 
-    $this->notice('Digital post sent to @type @id', $logContext + [
+    $this->notice('Digital post sent', $logContext + [
+      'handler_id' => 'os2forms_digital_post',
       'operation' => 'digital post sent',
-      '@type' => $recipientIdentifierType,
-      '@id' => $recipientIdentifier,
-    ]
-    );
+    ]);
 
     return [$response, $service->getLastKombiMeMoMessage()];
   }
@@ -245,6 +243,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
       $queue->enqueueJob($job);
       $context['@queue'] = $queue->id();
       $this->notice('Job for sending digital post add to the queue @queue.', $context + [
+        'handler_id' => 'os2forms_digital_post',
         'operation' => 'digital post queued for sending',
       ]);
 
@@ -252,6 +251,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     }
     catch (\Exception $exception) {
       $this->error('Error creating job for sending digital post.', $context + [
+        'handler_id' => 'os2forms_digital_post',
         'operation' => 'digital post failed',
       ]);
       return NULL;
