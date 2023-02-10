@@ -98,7 +98,7 @@ class MeMoHelper {
       $attentionData = (new AttentionData())
         ->setAttentionPerson((new AttentionPerson())
           ->setLabel($recipient->getLabel())
-          ->setPersonID($options['recipient-id'])
+          ->setPersonID($recipient->getRecipientID())
         )
         ->setAddress($address);
 
