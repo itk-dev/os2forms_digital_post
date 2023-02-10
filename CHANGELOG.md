@@ -9,6 +9,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.2]
+
 - Updated logging.
 - Fixed setting person id
 
@@ -28,6 +30,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   “KombiPostAfsend”](https://digitaliseringskataloget.dk/integration/sf1601).
 - Added GitHub Actions for coding standards checks and code analysis.
 
-[Unreleased]: https://github.com/itk-dev/os2forms_digital_post/compare/1.1.1...HEAD
+[Unreleased]: https://github.com/itk-dev/os2forms_digital_post/compare/1.1.2...HEAD
+[1.1.2]: https://github.com/itk-dev/os2forms_digital_post/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/itk-dev/os2forms_digital_post/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/itk-dev/os2forms_digital_post/compare/1.0.2...1.1.0
