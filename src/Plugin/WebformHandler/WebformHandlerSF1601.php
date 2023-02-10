@@ -241,10 +241,17 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   private function getRecipientElements(): array {
     $elements = $this->getWebform()->getElementsDecodedAndFlattened();
 
+    $elementTypes = [
+      'textfield',
+      'cpr_element',
+      'cpr_value_element',
+      'cvr_element',
+      'cvr_value_element',
+    ];
     $elements = array_filter(
       $elements,
-      static function (array $element) {
-        return in_array($element['#type'], ['textfield'], TRUE);
+      static function (array $element) use ($elementTypes) {
+        return in_array($element['#type'], $elementTypes, TRUE);
       }
     );
 
