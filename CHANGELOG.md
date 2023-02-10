@@ -9,7 +9,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
 - Remove CPR from exception
+- Added more recipient field types
+- Fixed error logging.
 
 ## [1.1.0]
 
