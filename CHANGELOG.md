@@ -9,6 +9,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Fixed setting person id
+
 ## [1.1.1]
 
 ### Changed
