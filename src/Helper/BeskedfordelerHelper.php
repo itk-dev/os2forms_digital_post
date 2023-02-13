@@ -2,9 +2,10 @@
 
 namespace Drupal\os2forms_digital_post\Helper;
 
-use DigitalPost\MeMo\Message;
+use DigitalPost\MeMo\Message as MeMoMessage;
 use Drupal\Core\Database\Connection;
-use Drupal\Core\Datetime\DrupalDateTime;
+use Drupal\os2forms_digital_post\Exception\InvalidMessage;
+use Drupal\os2forms_digital_post\Model\Message;
 use Psr\Log\LoggerAwareTrait;
 use Psr\Log\LoggerInterface;
 
@@ -42,17 +43,57 @@ class BeskedfordelerHelper {
   /**
    * Save MeMo message in database.
    */
-  public function saveMessage(Message $message) {
-    $messageId = $message->getMessageHeader()->getMessageID();
+  public function createMessage(int $submissionId, MeMoMessage $message, string $receipt) {
+    $messageUUID = $message->getMessageHeader()->getMessageUUID();
     $message = $this->meMoHelper->message2dom($message)->saveXML();
 
     return $this->database
       ->insert(self::TABLE_NAME)
       ->fields([
-        'created' => (new DrupalDateTime())->getTimestamp(),
-        'message_id' => $messageId,
-        'memo_message' => $message,
+        'submission_id' => $submissionId,
+        'message_uuid' => $messageUUID,
+        'message' => $message,
+        'receipt' => $receipt,
       ])
+      ->execute();
+  }
+
+  /**
+   * Load message.
+   *
+   * @param string $messageUUID
+   *   The message UUID.
+   *
+   * @return \Drupal\os2forms_digital_post\Model\Message|null
+   *   The message.
+   */
+  public function loadMessage(string $messageUUID): ?Message {
+    $messages = $this->database
+      ->select(self::TABLE_NAME, 'm')
+      ->fields('m')
+      ->condition('message_uuid', $messageUUID)
+      ->execute()
+      ->fetchAll(\PDO::FETCH_CLASS, Message::class);
+
+    return reset($messages) ?: NULL;
+  }
+
+  /**
+   * Add Beskedfordeler message to message.
+   */
+  public function addBeskedfordelerMessage(string $messageUUID, string $beskedfordelerMessage) {
+    $message = $this->loadMessage($messageUUID);
+
+    if (NULL === $message) {
+      throw new InvalidMessage(sprintf('Invalid message UUID: %s', $messageUUID));
+    }
+
+    return $this->database
+      ->update(self::TABLE_NAME)
+      ->fields([
+        'beskedfordeler_message' => $beskedfordelerMessage,
+      ])
+      ->condition('message_uuid', $messageUUID)
       ->execute();
   }
 
@@ -66,19 +107,25 @@ class BeskedfordelerHelper {
       self::TABLE_NAME => [
         'description' => 'OSForms digital post beskedfordeler',
         'fields' => [
-          'message_id' => [
-            'description' => 'The message identifier.',
-            'type' => 'varchar',
-            'length' => 255,
-            'not null' => TRUE,
-          ],
-          'created' => [
-            'description' => 'The Unix timestamp when the message was created.',
+          'submission_id' => [
+            'description' => 'The submission id.',
             'type' => 'int',
             'not null' => TRUE,
           ],
-          'memo_message' => [
+          'message_uuid' => [
+            'description' => 'The message UUID (formatted with dashes).',
+            'type' => 'varchar',
+            'length' => 36,
+            'not null' => TRUE,
+          ],
+          'message' => [
             'description' => 'The MeMo message (XML).',
+            'type' => 'text',
+            'size' => 'medium',
+            'not null' => TRUE,
+          ],
+          'receipt' => [
+            'description' => 'The MeMo message receipt (XML).',
             'type' => 'text',
             'size' => 'medium',
             'not null' => TRUE,
@@ -89,13 +136,8 @@ class BeskedfordelerHelper {
             'size' => 'medium',
             'not null' => FALSE,
           ],
-          'beskedfordeler_message_received' => [
-            'description' => 'The Unix timestamp when the Beskedfordeler message was received.',
-            'type' => 'int',
-            'not null' => FALSE,
-          ],
         ],
-        'primary key' => ['message_id'],
+        'primary key' => ['message_uuid'],
       ],
     ];
   }

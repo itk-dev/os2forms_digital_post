@@ -49,6 +49,9 @@ services:
 
   Drupal\os2forms_digital_post\EventSubscriber\BeskedfordelerEventSubscriber:
     arguments:
+      - '@Drupal\os2forms_digital_post\Helper\BeskedfordelerHelper'
+      - '@Drupal\beskedfordeler\Helper\MessageHelper'
+      - '@Drupal\os2forms_digital_post\Helper\WebformHelperSF1601'
       - '@logger.channel.os2forms_digital_post'
     tags:
       - { name: 'event_subscriber' }

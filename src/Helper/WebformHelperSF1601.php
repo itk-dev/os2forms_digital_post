@@ -218,7 +218,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     $type = $handlerMessageSettings[WebformHandlerSF1601::TYPE] ?? SF1601::TYPE_DIGITAL_POST;
     $response = $service->kombiPostAfsend($transactionId, $type, $message);
 
-    $this->beskedfordelerHelper->saveMessage($message);
+    $this->beskedfordelerHelper->createMessage($submission->id(), $message, (string) $response->getContent());
 
     return [$response, $service->getLastKombiMeMoMessage()];
   }
@@ -326,6 +326,36 @@ final class WebformHelperSF1601 implements LoggerInterface {
       ]);
 
       return JobResult::failure($e->getMessage());
+    }
+  }
+
+  /**
+   * Process Beskedfordeler data.
+   */
+  public function processBeskedfordelerData(int $submissionId, array $data) {
+    $webformSubmission = $this->loadSubmission($submissionId);
+    if (NULL !== $webformSubmission) {
+      $context = [
+        'webform_submission' => $webformSubmission,
+        'handler_id' => 'os2forms_digital_post',
+      ];
+      $status = $data['TransaktionsStatusKode'];
+
+      if (!empty($data['FejlDetaljer'])) {
+        $this->error('@status; @error_code: @error_text', $context + [
+          'operation' => 'digital post failed',
+          '@status' => $status,
+          '@error_code' => $data['FejlDetaljer']['FejlKode'],
+          '@error_text' => $data['FejlDetaljer']['FejlTekst'],
+          'data' => $data,
+        ]);
+      }
+      else {
+        $this->info('@status', $context + [
+          'operation' => 'digital post success',
+          '@status' => $status,
+        ]);
+      }
     }
   }
 
