@@ -36,6 +36,7 @@ services:
       - "@Drupal\\os2forms_digital_post\\Helper\\CertificateLocatorHelper"
       - "@entity_type.manager"
       - "@os2forms_cpr_lookup.service"
+      - "@os2forms_cvr_lookup.service"
       - "@Drupal\\os2forms_digital_post\\Helper\\MeMoHelper"
       - "@logger.factory"
 
