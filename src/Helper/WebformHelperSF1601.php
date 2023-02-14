@@ -359,4 +359,13 @@ final class WebformHelperSF1601 implements LoggerInterface {
     }
   }
 
+  /**
+   * Proxy for BeskedfordelerHelper::deleteMessages().
+   *
+   * @see BeskedfordelerHelper::deleteMessages()
+   */
+  public function deleteMessages(array $webformSubmissions) {
+    $this->beskedfordelerHelper->deleteMessages($webformSubmissions);
+  }
+
 }

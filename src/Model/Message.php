@@ -41,7 +41,7 @@ class Message {
    *
    * @var string
    */
-  public string $beskedfordelerMessage;
+  public ?string $beskedfordelerMessage;
 
   /**
    * Called when using \PDO::FETCH_CLASS.
