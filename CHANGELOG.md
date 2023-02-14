@@ -9,6 +9,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added handling of CVR recipients.
+
 ## [1.1.2]
 
 - Updated logging.
