@@ -80,7 +80,7 @@ class BeskedfordelerHelper {
   /**
    * Add Beskedfordeler message to message.
    */
-  public function addBeskedfordelerMessage(string $messageUUID, string $beskedfordelerMessage) {
+  public function addBeskedfordelerMessage(string $messageUUID, string $beskedfordelerMessage): bool {
     $message = $this->loadMessage($messageUUID);
 
     if (NULL === $message) {
@@ -93,7 +93,7 @@ class BeskedfordelerHelper {
         'beskedfordeler_message' => $beskedfordelerMessage,
       ])
       ->condition('message_uuid', $messageUUID)
-      ->execute();
+      ->execute() > 0;
   }
 
   /**

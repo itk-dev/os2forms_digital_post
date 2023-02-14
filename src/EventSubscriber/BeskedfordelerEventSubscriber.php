@@ -73,7 +73,7 @@ final class BeskedfordelerEventSubscriber extends AbstractBeskedfordelerEventSub
         return;
       }
 
-      if ($this->beskedfordelerHelper->addBeskedfordelerMessage($messageUUID, $message) > 0) {
+      if ($this->beskedfordelerHelper->addBeskedfordelerMessage($messageUUID, $message)) {
         $message = $this->beskedfordelerHelper->loadMessage($messageUUID);
         $this->webformHelper->processBeskedfordelerData($message->submissionId, $data);
       }
