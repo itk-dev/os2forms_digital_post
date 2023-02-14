@@ -68,14 +68,12 @@ class BeskedfordelerHelper {
    *   The message.
    */
   public function loadMessage(string $messageUUID): ?Message {
-    $messages = $this->database
+    return $this->database
       ->select(self::TABLE_NAME, 'm')
       ->fields('m')
       ->condition('message_uuid', $messageUUID)
       ->execute()
-      ->fetchAll(\PDO::FETCH_CLASS, Message::class);
-
-    return reset($messages) ?: NULL;
+      ->fetchObject(Message::class) ?: NULL;
   }
 
   /**
