@@ -153,6 +153,9 @@ class BeskedfordelerHelper {
             'not null' => FALSE,
           ],
         ],
+        'indexes' => [
+          'submission_id' => ['submission_id'],
+        ],
         'primary key' => ['message_uuid'],
       ],
     ];
