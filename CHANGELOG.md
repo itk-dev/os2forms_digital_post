@@ -12,6 +12,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 ### Added
 
 - Added handling of CVR recipients.
+- Added handling of Beskedfordeler messages.
 
 ## [1.1.2]
 
