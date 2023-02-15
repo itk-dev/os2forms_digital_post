@@ -9,6 +9,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+- Update dompdf dependency.
+
 ## [1.1.2]
 
 - Updated logging.
