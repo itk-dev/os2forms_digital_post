@@ -14,6 +14,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Added handling of CVR recipients.
 - Added handling of Beskedfordeler messages.
 
+### Changed
+
+- Update dompdf dependency.
+
 ## [1.1.2]
 
 - Updated logging.
