@@ -337,6 +337,20 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function postDelete(WebformSubmissionInterface $webformSubmission) {
+    $this->helper->deleteMessages([$webformSubmission]);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function postPurge(array $webformSubmissions) {
+    $this->helper->deleteMessages($webformSubmissions);
+  }
+
+  /**
    * Display the invoked plugin method to end user.
    *
    * @param string $method_name

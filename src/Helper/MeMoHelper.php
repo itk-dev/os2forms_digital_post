@@ -17,7 +17,9 @@ use DigitalPost\MeMo\Recipient;
 use DigitalPost\MeMo\Sender;
 use Drupal\Core\Render\ElementInfoManagerInterface;
 use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
+use Drupal\os2forms_cvr_lookup\CVR\CvrServiceResult;
 use Drupal\os2forms_digital_post\Exception\InvalidAttachmentElementException;
+use Drupal\os2forms_digital_post\Exception\InvalidRecipientDataException;
 use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drupal\webform\WebformSubmissionInterface;
@@ -62,7 +64,7 @@ class MeMoHelper {
   /**
    * Build MeMo message.
    */
-  public function buildMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, array $submissionData = [], CprServiceResult $cprServiceResult = NULL): Message {
+  public function buildMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, array $submissionData = [], $recipientData = NULL): Message {
     $messageUUID = Serializer::createUuid();
     $messageID = Serializer::createUuid();
 
@@ -78,32 +80,7 @@ class MeMoHelper {
       ->setIdType($options[WebformHelperSF1601::RECIPIENT_IDENTIFIER_TYPE])
       ->setRecipientID($options[WebformHelperSF1601::RECIPIENT_IDENTIFIER]);
 
-    if (NULL !== $cprServiceResult) {
-      $name = implode(' ', array_filter([
-        $cprServiceResult->getFirstName(),
-        $cprServiceResult->getMiddleName(),
-        $cprServiceResult->getLastName(),
-      ]));
-
-      $recipient->setLabel($name);
-      $address = (new Address())
-        ->setCo('')
-        ->setAddressLabel($cprServiceResult->getStreetName() ?: '')
-        ->setHouseNumber($cprServiceResult->getHouseNumber() ?: '')
-        ->setFloor($cprServiceResult->getFloor() ?: '')
-        ->setDoor($cprServiceResult->getSide() ?: '')
-        ->setZipCode($cprServiceResult->getPostalCode() ?: '')
-        ->setCity($cprServiceResult->getCity() ?: '')
-        ->setCountry('DA');
-      $attentionData = (new AttentionData())
-        ->setAttentionPerson((new AttentionPerson())
-          ->setLabel($recipient->getLabel())
-          ->setPersonID($recipient->getRecipientID())
-        )
-        ->setAddress($address);
-
-      $recipient->setAttentionData($attentionData);
-    }
+    $this->enrichRecipient($recipient, $recipientData);
 
     $label = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
     $messageHeader = (new MessageHeader())
@@ -157,6 +134,65 @@ class MeMoHelper {
     $message->setMessageBody($body);
 
     return $message;
+  }
+
+  /**
+   * Enrich recipient with additional data from a lookup.
+   */
+  private function enrichRecipient(Recipient $recipient, $recipientData = NULL): Recipient {
+    if ($recipientData instanceof CprServiceResult) {
+      $name = implode(' ', array_filter([
+        $recipientData->getFirstName(),
+        $recipientData->getMiddleName(),
+        $recipientData->getLastName(),
+      ]));
+
+      $recipient->setLabel($name);
+      $address = (new Address())
+        ->setCo('')
+        ->setAddressLabel($recipientData->getStreetName() ?: '')
+        ->setHouseNumber($recipientData->getHouseNumber() ?: '')
+        ->setFloor($recipientData->getFloor() ?: '')
+        ->setDoor($recipientData->getSide() ?: '')
+        ->setZipCode($recipientData->getPostalCode() ?: '')
+        ->setCity($recipientData->getCity() ?: '')
+        ->setCountry('DA');
+      $attentionData = (new AttentionData())
+        ->setAttentionPerson((new AttentionPerson())
+          ->setLabel($recipient->getLabel())
+          ->setPersonID($recipient->getRecipientID())
+        )
+        ->setAddress($address);
+
+      $recipient->setAttentionData($attentionData);
+    }
+    elseif ($recipientData instanceof CvrServiceResult) {
+      $name = $recipientData->getName();
+
+      $recipient->setLabel($name);
+      $address = (new Address())
+        ->setCo('')
+        ->setAddressLabel($recipientData->getStreetName() ?: '')
+        ->setHouseNumber($recipientData->getHouseNumber() ?: '')
+        ->setFloor($recipientData->getFloor() ?: '')
+        ->setDoor($recipientData->getSide() ?: '')
+        ->setZipCode($recipientData->getPostalCode() ?: '')
+        ->setCity($recipientData->getCity() ?: '')
+        ->setCountry('DA');
+      $attentionData = (new AttentionData())
+        ->setAttentionPerson((new AttentionPerson())
+          ->setLabel($recipient->getLabel())
+          ->setPersonID($recipient->getRecipientID())
+        )
+        ->setAddress($address);
+
+      $recipient->setAttentionData($attentionData);
+    }
+    elseif (NULL !== $recipientData) {
+      throw new InvalidRecipientDataException(sprintf('Cannot handle recipient data of type %s', is_scalar($recipientData) ? gettype($recipientData) : get_class($recipientData)));
+    }
+
+    return $recipient;
   }
 
   /**
