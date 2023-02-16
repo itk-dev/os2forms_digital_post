@@ -22,5 +22,12 @@ function os2forms_digital_post_schema() {
  * Enable Beskedfordeler module.
  */
 function os2forms_digital_post_update_9001() {
-  \Drupal::service('module_installer')->install(['beskedfordeler']);
+  Drupal::service('module_installer')->install(['beskedfordeler']);
+}
+
+/**
+ * Create beskedfordeler table.
+ */
+function os2forms_digital_post_update_9002() {
+  Drupal::service(BeskedfordelerHelper::class)->update9002();
 }
