@@ -9,6 +9,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added creation of Beskedfordeler table.
+
 ## [1.2.0]
 
 ### Added
