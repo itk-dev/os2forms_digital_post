@@ -84,7 +84,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "dealerdirect/phpcodesniffer-composer-installer": true,
-            "vaimo/composer-patches": true
+            "vaimo/composer-patches": true,
+            "cweagans/composer-patches": true
         }
     }
 }
