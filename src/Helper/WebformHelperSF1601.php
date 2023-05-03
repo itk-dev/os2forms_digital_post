@@ -46,7 +46,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
    *
    * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected EntityStorageInterface $queueStorage;
+  protected ConfigEntityStorage $queueStorage;
 
   /**
    * The logger.
