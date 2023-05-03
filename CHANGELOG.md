@@ -9,6 +9,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Changed dependency on CPR and CVR lookup modules.
+
 ## [2.0.0]
 
 ### Changed
