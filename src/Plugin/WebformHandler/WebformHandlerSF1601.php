@@ -243,6 +243,10 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
     $elementTypes = [
       'textfield',
+      'os2forms_nemid_company_cvr',
+      'os2forms_nemid_company_cvr_fetch_data',
+      'os2forms_nemid_cpr',
+      // @todo Remove these when we remove the elements.
       'cpr_element',
       'cpr_value_element',
       'cvr_element',
