@@ -9,6 +9,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Updated recipient element names
+  [PR-38](https://github.com/itk-dev/os2forms_digital_post/pull/38)
+
 ## [1.2.2]
 
 ### Added
