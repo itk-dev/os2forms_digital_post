@@ -9,17 +9,17 @@ use Drupal\Core\Config\Entity\ConfigEntityStorage;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
-use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
-use Drupal\os2forms_cvr_lookup\Service\CvrServiceInterface;
 use Drupal\os2forms_digital_post\Exception\InvalidRecipientIdentifierElementException;
 use Drupal\os2forms_digital_post\Exception\RuntimeException;
 use Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException;
 use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\AdvancedQueue\JobType\SendDigitalPostSF1601;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
+use Drupal\os2web_datalookup\Plugin\DataLookupManager;
+use Drupal\os2web_datalookup\Plugin\os2web\DataLookup\DataLookupInterfaceCompany;
+use Drupal\os2web_datalookup\Plugin\os2web\DataLookup\DataLookupInterfaceCpr;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformSubmissionStorageInterface;
-use ItkDev\Serviceplatformen\Service\Exception\ServiceException;
 use ItkDev\Serviceplatformen\Service\SF1601\Serializer;
 use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
 use Psr\Log\LoggerInterface;
@@ -35,20 +35,6 @@ final class WebformHelperSF1601 implements LoggerInterface {
   public const RECIPIENT_IDENTIFIER = 'recipient_identifier';
 
   /**
-   * The settings.
-   *
-   * @var \Drupal\os2forms_digital_post\SettingsInterface|Settings
-   */
-  private Settings $settings;
-
-  /**
-   * The certificate locator helper.
-   *
-   * @var CertificateLocatorHelper
-   */
-  private CertificateLocatorHelper $certificateLocatorHelper;
-
-  /**
    * The webform submission storage.
    *
    * @var \Drupal\webform\WebformSubmissionStorageInterface
@@ -61,34 +47,6 @@ final class WebformHelperSF1601 implements LoggerInterface {
    * @var \Drupal\Core\Config\Entity\ConfigEntityStorage|\Drupal\Core\Entity\EntityStorageInterface
    */
   protected ConfigEntityStorage $queueStorage;
-
-  /**
-   * The CPR service.
-   *
-   * @var \Drupal\os2forms_cpr_lookup\Service\CprServiceInterface
-   */
-  protected CprServiceInterface $cprService;
-
-  /**
-   * The CVR service.
-   *
-   * @var \Drupal\os2forms_cvr_lookup\Service\CvrServiceInterface
-   */
-  protected CvrServiceInterface $cvrService;
-
-  /**
-   * The MeMo helper.
-   *
-   * @var MeMoHelper
-   */
-  protected MeMoHelper $meMoHelper;
-
-  /**
-   * The Beskedfordeler helper.
-   *
-   * @var BeskedfordelerHelper
-   */
-  private BeskedfordelerHelper $beskedfordelerHelper;
 
   /**
    * The logger.
@@ -108,23 +66,16 @@ final class WebformHelperSF1601 implements LoggerInterface {
    * Constructor.
    */
   public function __construct(
-    Settings $settings,
-    CertificateLocatorHelper $certificateLocatorHelper,
+    readonly private Settings $settings,
+    readonly private CertificateLocatorHelper $certificateLocatorHelper,
     EntityTypeManagerInterface $entityTypeManager,
-    CprServiceInterface $cprService,
-    CvrServiceInterface $cvrService,
-    MeMoHelper $meMoHelper,
-    BeskedfordelerHelper $beskedfordelerHelper,
+    readonly private DataLookupManager $dataLookupManager,
+    readonly private MeMoHelper $meMoHelper,
+    readonly private BeskedfordelerHelper $beskedfordelerHelper,
     LoggerChannelFactoryInterface $loggerChannelFactory
   ) {
-    $this->settings = $settings;
-    $this->certificateLocatorHelper = $certificateLocatorHelper;
     $this->webformSubmissionStorage = $entityTypeManager->getStorage('webform_submission');
     $this->queueStorage = $entityTypeManager->getStorage('advancedqueue_queue');
-    $this->cprService = $cprService;
-    $this->cvrService = $cvrService;
-    $this->meMoHelper = $meMoHelper;
-    $this->beskedfordelerHelper = $beskedfordelerHelper;
     $this->logger = $loggerChannelFactory->get('os2forms_digital_post');
     $this->submissionLogger = $loggerChannelFactory->get('webform_submission');
   }
@@ -188,22 +139,26 @@ final class WebformHelperSF1601 implements LoggerInterface {
     $cvrServiceResult = NULL;
 
     if (preg_match('/^\d{8}$/', $recipientIdentifier)) {
-      try {
-        $cvrServiceResult = $this->cvrService->search($recipientIdentifier);
-        $recipientIdentifierType = 'CVR';
+      $instance = $this->dataLookupManager->createDefaultInstanceByGroup('cvr_lookup');
+      if (!($instance instanceof DataLookupInterfaceCompany)) {
+        throw new RuntimeException('Cannot get CVR data lookup instance');
       }
-      catch (ServiceException $serviceException) {
+      $cvrServiceResult = $instance->lookup($recipientIdentifier);
+      if (!$cvrServiceResult->isSuccessful()) {
         throw new RuntimeException('Cannot validate recipient CVR');
       }
+      $recipientIdentifierType = 'CVR';
     }
     else {
-      try {
-        $cprServiceResult = $this->cprService->search($recipientIdentifier);
-        $recipientIdentifierType = 'CPR';
+      $instance = $this->dataLookupManager->createDefaultInstanceByGroup('cpr_lookup');
+      if (!($instance instanceof DataLookupInterfaceCpr)) {
+        throw new RuntimeException('Cannot get CPR data lookup instance');
       }
-      catch (ServiceException $serviceException) {
+      $cprServiceResult = $instance->lookup($recipientIdentifier);
+      if (!$cprServiceResult->isSuccessful()) {
         throw new RuntimeException('Cannot validate recipient CPR');
       }
+      $recipientIdentifierType = 'CPR';
     }
 
     $senderSettings = $this->settings->getSender();

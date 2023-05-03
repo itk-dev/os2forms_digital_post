@@ -16,12 +16,12 @@ use DigitalPost\MeMo\MessageHeader;
 use DigitalPost\MeMo\Recipient;
 use DigitalPost\MeMo\Sender;
 use Drupal\Core\Render\ElementInfoManagerInterface;
-use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
-use Drupal\os2forms_cvr_lookup\CVR\CvrServiceResult;
 use Drupal\os2forms_digital_post\Exception\InvalidAttachmentElementException;
 use Drupal\os2forms_digital_post\Exception\InvalidRecipientDataException;
 use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
+use Drupal\os2web_datalookup\LookupResult\CompanyLookupResult;
+use Drupal\os2web_datalookup\LookupResult\CprLookupResult;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformTokenManagerInterface;
 use Drupal\webform_attachment\Element\WebformAttachmentBase;
@@ -140,20 +140,15 @@ class MeMoHelper {
    * Enrich recipient with additional data from a lookup.
    */
   private function enrichRecipient(Recipient $recipient, $recipientData = NULL): Recipient {
-    if ($recipientData instanceof CprServiceResult) {
-      $name = implode(' ', array_filter([
-        $recipientData->getFirstName(),
-        $recipientData->getMiddleName(),
-        $recipientData->getLastName(),
-      ]));
-
+    if ($recipientData instanceof CprLookupResult) {
+      $name = $recipientData->getName();
       $recipient->setLabel($name);
       $address = (new Address())
         ->setCo('')
-        ->setAddressLabel($recipientData->getStreetName() ?: '')
-        ->setHouseNumber($recipientData->getHouseNumber() ?: '')
+        ->setAddressLabel($recipientData->getStreet() ?: '')
+        ->setHouseNumber($recipientData->getHouseNr() ?: '')
         ->setFloor($recipientData->getFloor() ?: '')
-        ->setDoor($recipientData->getSide() ?: '')
+        ->setDoor($recipientData->getApartmentNr() ?: '')
         ->setZipCode($recipientData->getPostalCode() ?: '')
         ->setCity($recipientData->getCity() ?: '')
         ->setCountry('DA');
@@ -166,16 +161,16 @@ class MeMoHelper {
 
       $recipient->setAttentionData($attentionData);
     }
-    elseif ($recipientData instanceof CvrServiceResult) {
+    elseif ($recipientData instanceof CompanyLookupResult) {
       $name = $recipientData->getName();
 
       $recipient->setLabel($name);
       $address = (new Address())
         ->setCo('')
-        ->setAddressLabel($recipientData->getStreetName() ?: '')
-        ->setHouseNumber($recipientData->getHouseNumber() ?: '')
+        ->setAddressLabel($recipientData->getStreet() ?: '')
+        ->setHouseNumber($recipientData->getHouseNr() ?: '')
         ->setFloor($recipientData->getFloor() ?: '')
-        ->setDoor($recipientData->getSide() ?: '')
+        ->setDoor($recipientData->getApartmentNr() ?: '')
         ->setZipCode($recipientData->getPostalCode() ?: '')
         ->setCity($recipientData->getCity() ?: '')
         ->setCountry('DA');

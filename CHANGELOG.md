@@ -18,6 +18,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Changed composer name to `os2forms/os2forms_digital_post`
   [PR-47](https://github.com/itk-dev/os2forms_digital_post/pull/47)
+- Changed dependency on CPR and CVR lookup modules.
 
 ## [2.0.1]
 
