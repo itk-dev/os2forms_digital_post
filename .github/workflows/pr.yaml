@@ -127,6 +127,7 @@ jobs:
 
   #         # Allow plugins
   #         composer --working-dir=drupal config --no-plugins allow-plugins.vaimo/composer-patches true
+  #         composer --working-dir=drupal config --no-plugins allow-plugins.cweagans/composer-patches true
 
   #         # Add our module as a composer repository.
   #         composer --working-dir=drupal --no-interaction config --append repositories.itk-dev/os2forms_digital_post path web/modules/contrib/os2forms_digital_post
