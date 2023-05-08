@@ -3,9 +3,9 @@
 namespace Drupal\os2forms_digital_post\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
 use Drupal\os2forms_digital_post\Helper\WebformHelper;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
+use Drupal\os2web_datalookup\LookupResult\CprLookupResult;
 use Drush\Commands\DrushCommands;
 
 /**
@@ -74,24 +74,15 @@ class CreatePdf extends DrushCommands {
       return;
     }
 
-    $cprServiceResult = new CprServiceResult(json_decode(json_encode([
-      'persondata' => [
-        'navn' => [
-          'fornavn' => 'Test',
-          'efternavn' => 'Testersen',
-        ],
-      ],
-      'adresse' => [
-        'aktuelAdresse' => [
-          'vejnavn' => 'Testervej',
-          'husnummer' => '1',
-          'etage' => '2',
-          'sidedoer' => 'tv',
-          'postnummer' => '8000',
-          'postdistrikt' => 'Aarhus C',
-        ],
-      ],
-    ])));
+    $cprServiceResult = new CprLookupResult();
+    $cprServiceResult->setSuccessful();
+    $cprServiceResult->setName('Test Testersen');
+    $cprServiceResult->setStreet('Testervej');
+    $cprServiceResult->setHouseNr('1');
+    $cprServiceResult->setFloor('2');
+    $cprServiceResult->setApartmentNr('tv');
+    $cprServiceResult->setPostalCode('8000');
+    $cprServiceResult->setCity('Aarhus C');
 
     $context = $this->webformHelper->getTemplateContext($webform_submission, $cprServiceResult, []);
 
