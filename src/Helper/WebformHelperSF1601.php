@@ -71,6 +71,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     EntityTypeManagerInterface $entityTypeManager,
     readonly private DataLookupManager $dataLookupManager,
     readonly private MeMoHelper $meMoHelper,
+    readonly private ForsendelseHelper $forsendelseHelper,
     readonly private BeskedfordelerHelper $beskedfordelerHelper,
     LoggerChannelFactoryInterface $loggerChannelFactory
   ) {
@@ -124,16 +125,16 @@ final class WebformHelperSF1601 implements LoggerInterface {
     // Remove all non-digits from recipient identifier.
     $recipientIdentifier = preg_replace('/[^\d]+/', '', $recipientIdentifier);
 
-    $cprServiceResult = NULL;
-    $cvrServiceResult = NULL;
+    /** @var \Drupal\os2web_datalookup\LookupResult\CprLookupResult|CompanyLookupResult|null $lookupResult */
+    $lookupResult = NULL;
 
     if (preg_match('/^\d{8}$/', $recipientIdentifier)) {
       $instance = $this->dataLookupManager->createDefaultInstanceByGroup('cvr_lookup');
       if (!($instance instanceof DataLookupInterfaceCompany)) {
         throw new RuntimeException('Cannot get CVR data lookup instance');
       }
-      $cvrServiceResult = $instance->lookup($recipientIdentifier);
-      if (!$cvrServiceResult->isSuccessful()) {
+      $lookupResult = $instance->lookup($recipientIdentifier);
+      if (!$lookupResult->isSuccessful()) {
         throw new RuntimeException('Cannot validate recipient CVR');
       }
       $recipientIdentifierType = 'CVR';
@@ -143,8 +144,8 @@ final class WebformHelperSF1601 implements LoggerInterface {
       if (!($instance instanceof DataLookupInterfaceCpr)) {
         throw new RuntimeException('Cannot get CPR data lookup instance');
       }
-      $cprServiceResult = $instance->lookup($recipientIdentifier);
-      if (!$cprServiceResult->isSuccessful()) {
+      $lookupResult = $instance->lookup($recipientIdentifier);
+      if (!$lookupResult->isSuccessful()) {
         throw new RuntimeException('Cannot validate recipient CPR');
       }
       $recipientIdentifierType = 'CPR';
@@ -161,7 +162,19 @@ final class WebformHelperSF1601 implements LoggerInterface {
       WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
-    $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings, $submissionData, $cprServiceResult ?? $cvrServiceResult);
+    $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings, $submissionData, $lookupResult);
+    $forsendelseOptions = [
+      self::RECIPIENT_IDENTIFIER_TYPE => $recipientIdentifierType,
+      self::RECIPIENT_IDENTIFIER => $recipientIdentifier,
+
+      SettingsForm::SENDER_IDENTIFIER_TYPE => $senderSettings[SettingsForm::SENDER_IDENTIFIER_TYPE],
+      SettingsForm::SENDER_IDENTIFIER => $senderSettings[SettingsForm::SENDER_IDENTIFIER],
+      SettingsForm::FORSENDELSES_TYPE_IDENTIFIKATOR => $senderSettings[SettingsForm::FORSENDELSES_TYPE_IDENTIFIKATOR],
+
+      WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
+      WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
+    ];
+    $forsendelse = $this->forsendelseHelper->buildForsendelse($submission, $forsendelseOptions, $handlerSettings, $submissionData, $lookupResult);
 
     $options = [
       'test_mode' => (bool) $this->settings->getTestMode(),
@@ -171,7 +184,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     $service = new SF1601($options);
     $transactionId = Serializer::createUuid();
     $type = $handlerMessageSettings[WebformHandlerSF1601::TYPE] ?? SF1601::TYPE_DIGITAL_POST;
-    $response = $service->kombiPostAfsend($transactionId, $type, $message);
+    $response = $service->kombiPostAfsend($transactionId, $type, $message, $forsendelse);
 
     $this->beskedfordelerHelper->createMessage($submission->id(), $message, (string) $response->getContent());
 
