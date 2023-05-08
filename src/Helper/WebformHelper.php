@@ -11,6 +11,7 @@ use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
 use Drupal\os2forms_digital_post\Exception\CprElementNotFoundInSubmissionException;
 use Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
+use Drupal\os2web_datalookup\LookupResult\CprLookupResult;
 use Drupal\webform\WebformSubmissionInterface;
 
 /**
@@ -75,7 +76,7 @@ final class WebformHelper {
   /**
    * Get template context.
    */
-  public function getTemplateContext(WebformSubmissionInterface $webformSubmission, CprServiceResult $cprServiceResult, array $configuration = []) {
+  public function getTemplateContext(WebformSubmissionInterface $webformSubmission, CprLookupResult $cprLookupResult, array $configuration = []) {
     $webform = $webformSubmission->getWebform();
 
     $view_builder = $this->entityTypeManager->getViewBuilder('webform_submission');
@@ -84,19 +85,19 @@ final class WebformHelper {
 
     // We cannot use “side” (from address lookup via cpr) as “suiteIdentifier”
     // when sending digital port. Therefore we append it to “floor” instead.
-    $floor = $cprServiceResult->getFloor();
-    if (!empty($cprServiceResult->getSide())) {
-      $floor .= ' ' . $cprServiceResult->getSide();
+    $floor = $cprLookupResult->getFloor();
+    if (!empty($cprLookupResult->getApartmentNr())) {
+      $floor .= ' ' . $cprLookupResult->getApartmentNr();
     }
 
     $recipient = [
-      'name' => $cprServiceResult->getName(),
-      'streetName' => $cprServiceResult->getStreetName(),
-      'streetNumber' => $cprServiceResult->getHouseNumber(),
+      'name' => $cprLookupResult->getName(),
+      'streetName' => $cprLookupResult->getStreet(),
+      'streetNumber' => $cprLookupResult->getHouseNr(),
       'floor' => $floor,
       'side' => NULL,
-      'postalCode' => $cprServiceResult->getPostalCode(),
-      'city' => $cprServiceResult->getCity(),
+      'postalCode' => $cprLookupResult->getPostalCode(),
+      'city' => $cprLookupResult->getCity(),
     ];
 
     return [
