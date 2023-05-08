@@ -3,10 +3,13 @@
 namespace Drupal\os2forms_digital_post\Commands;
 
 use DigitalPost\MeMo\Message;
+use Drupal\os2forms_digital_post\Form\SettingsForm;
+use Drupal\os2forms_digital_post\Helper\ForsendelseHelper;
 use Drupal\os2forms_digital_post\Helper\MeMoHelper;
 use Drupal\os2forms_digital_post\Helper\WebformHelperSF1601;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drush\Commands\DrushCommands;
+use Oio\Fjernprint\ForsendelseI;
 use Symfony\Component\Console\Exception\InvalidArgumentException;
 use Symfony\Component\Console\Exception\InvalidOptionException;
 use Symfony\Component\Yaml\Yaml;
@@ -16,32 +19,21 @@ use Symfony\Component\Yaml\Yaml;
  */
 final class CommandsSF1601 extends DrushCommands {
   private const HIDDEN_CONTENT = '👻';
-  private const DUMP_OPTION_VALUES = [
+  private const MEMO_DUMP_OPTION_VALUES = [
     'main-document-file-info',
     'main-document-file-content',
   ];
-
-  /**
-   * The webform helper.
-   *
-   * @var \Drupal\os2forms_digital_post\WebformHelperSF1601
-   */
-  private WebformHelperSF1601 $webformHelper;
-
-  /**
-   * The MeMo helper.
-   *
-   * @var \Drupal\os2forms_digital_post\Helper\MeMoHelper
-   */
-  private MeMoHelper $meMoHelper;
+  private const FORSENDELSE_DUMP_OPTION_VALUES = [];
 
   /**
    * Constructor.
    */
-  public function __construct(WebformHelperSF1601 $webformHelper, MeMoHelper $meMoHelper) {
+  public function __construct(
+    readonly private WebformHelperSF1601 $webformHelper,
+    readonly private MeMoHelper $meMoHelper,
+    readonly private ForsendelseHelper $forsendelseHelper,
+  ) {
     parent::__construct();
-    $this->webformHelper = $webformHelper;
-    $this->meMoHelper = $meMoHelper;
   }
 
   /**
@@ -110,6 +102,12 @@ final class CommandsSF1601 extends DrushCommands {
 
     $handlerMessageSettings = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE];
     $messageOptions = [
+      WebformHelperSF1601::RECIPIENT_IDENTIFIER_TYPE => 'test',
+      WebformHelperSF1601::RECIPIENT_IDENTIFIER => 'test',
+
+      SettingsForm::SENDER_IDENTIFIER_TYPE => 'test',
+      SettingsForm::SENDER_IDENTIFIER => 'test',
+
       WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
@@ -119,7 +117,7 @@ final class CommandsSF1601 extends DrushCommands {
       if (TRUE === $options['dump']) {
         throw new InvalidOptionException('Missing dump option value');
       }
-      $this->dump((string) $options['dump'], $message);
+      $this->meMoDump((string) $options['dump'], $message);
       return;
     }
 
@@ -129,9 +127,61 @@ final class CommandsSF1601 extends DrushCommands {
   }
 
   /**
-   * Dump stuff.
+   * Show forsendelse for a submission.
+   *
+   * @param int $submissionId
+   *   The submission id.
+   * @param string $handlerId
+   *   The handler id.
+   * @param array $options
+   *   The command options.
+   *
+   * @option array handler-settings
+   *  The handler settings (JSON).
+   * @option string recipient-element
+   *   The recipient element key.
+   * @option string attachment-element
+   *   The attachment element key.
+   * @option string dump
+   *   Dump content to stdout.
+   *
+   * @command os2forms_digital_post:digital-post:forsendelse-show
+   * @usage os2forms_digital_post:digital-post:forsendelse-show --help
    */
-  private function dump(string $dump, Message $message) {
+  public function forsendelseShow(int $submissionId, string $handlerId, array $options = [
+    'handler-settings' => NULL,
+    'recipient-element' => NULL,
+    'attachment-element' => NULL,
+    'submission-data' => NULL,
+    'dump' => NULL,
+  ]) {
+    [$submission, $handlerSettings] = $this->getData($submissionId, $handlerId, $options);
+
+    $handlerMessageSettings = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE];
+    $messageOptions = [
+      WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
+      WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
+      ForsendelseHelper::FORSENDELSES_TYPE_IDENTIFIKATOR => 'test',
+    ];
+    $message = $this->forsendelseHelper->buildForsendelse($submission, $messageOptions, $handlerSettings);
+
+    if (isset($options['dump'])) {
+      if (TRUE === $options['dump']) {
+        throw new InvalidOptionException('Missing dump option value');
+      }
+      $this->forsendelseDump((string) $options['dump'], $message);
+      return;
+    }
+
+    $document = $this->forsendelseHelper->message2dom($message);
+
+    $this->output()->writeln($document->saveXML());
+  }
+
+  /**
+   * Dump MeMo message stuff.
+   */
+  private function meMoDump(string $dump, Message $message) {
     switch ($dump) {
       case 'main-document-file-info':
         foreach ($message->getMessageBody()->getMainDocument()->getFile() as $file) {
@@ -155,7 +205,24 @@ final class CommandsSF1601 extends DrushCommands {
         throw new InvalidOptionException(sprintf(
           'Invalid dump option %s. Must be one of %s',
           json_encode($dump),
-          implode(', ', array_map('json_encode', self::DUMP_OPTION_VALUES))
+          implode(', ', array_map('json_encode', self::MEMO_DUMP_OPTION_VALUES))
+        ));
+    }
+  }
+
+  /**
+   * Dump forsendelse stuff.
+   */
+  private function forsendelseDump(string $dump, ForsendelseI $forsendelse) {
+    switch ($dump) {
+      case self::HIDDEN_CONTENT:
+        break;
+
+      default:
+        throw new InvalidOptionException(sprintf(
+          'Invalid dump option %s. Must be one of %s',
+          json_encode($dump),
+          implode(', ', array_map('json_encode', self::MEMO_DUMP_OPTION_VALUES))
         ));
     }
   }
@@ -177,7 +244,7 @@ final class CommandsSF1601 extends DrushCommands {
       catch (\JsonException $exception) {
         throw new InvalidArgumentException(sprintf('Submission data must be valid JSON.'));
       }
-      if (!is_array($submissionData) || !$this->isAssoc($submissionData)) {
+      if (!is_array($submissionData) || array_is_list($submissionData)) {
         throw new InvalidArgumentException(sprintf('Submission data must be an associative array.'));
       }
     }
@@ -191,7 +258,7 @@ final class CommandsSF1601 extends DrushCommands {
       catch (\JsonException $exception) {
         throw new InvalidArgumentException(sprintf('Handler configuration must be valid JSON.'));
       }
-      if (!is_array($settings) || !$this->isAssoc($settings)) {
+      if (!is_array($settings) || array_is_list($settings)) {
         throw new InvalidArgumentException(sprintf('Handler configuration must be an associative array.'));
       }
       $handlerSettings = array_merge($handlerSettings, $settings);
@@ -205,18 +272,6 @@ final class CommandsSF1601 extends DrushCommands {
     }
 
     return [$submission, $handlerSettings, $submissionData];
-  }
-
-  /**
-   * Check if an array is an associative array.
-   *
-   * @see https://stackoverflow.com/a/173479/2502647
-   */
-  private function isAssoc(array $arr) {
-    if ([] === $arr) {
-      return FALSE;
-    }
-    return array_keys($arr) !== range(0, count($arr) - 1);
   }
 
 }

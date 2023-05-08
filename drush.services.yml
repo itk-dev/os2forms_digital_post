@@ -9,5 +9,6 @@ services:
       arguments:
         - '@Drupal\os2forms_digital_post\Helper\WebformHelperSF1601'
         - '@Drupal\os2forms_digital_post\Helper\MeMoHelper'
+        - '@Drupal\os2forms_digital_post\Helper\ForsendelseHelper'
       tags:
         - { name: drush.command }

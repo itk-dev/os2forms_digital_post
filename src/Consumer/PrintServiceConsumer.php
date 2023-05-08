@@ -29,7 +29,7 @@ use WsdlToPhp\PackageBase\AbstractSoapClientBase;
 use GuzzleHttp\Client;
 use Http\Factory\Guzzle\RequestFactory;
 use ItkDev\AzureKeyVault\Authorisation\VaultToken;
-use Http\Adapter\Guzzle7\Client as GuzzleAdapter;
+use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
 use ItkDev\AzureKeyVault\KeyVault\VaultSecret;
 
 /**

@@ -21,6 +21,7 @@ final class SettingsForm extends FormBase {
 
   public const SENDER_IDENTIFIER_TYPE = 'sender_identifier_type';
   public const SENDER_IDENTIFIER = 'sender_identifier';
+  public const FORSENDELSES_TYPE_IDENTIFIKATOR = 'forsendelses_type_identifikator';
 
   /**
    * The settings.
@@ -101,6 +102,13 @@ final class SettingsForm extends FormBase {
         '#type' => 'textfield',
         '#title' => $this->t('Identifier'),
         '#default_value' => $sender[self::SENDER_IDENTIFIER] ?? NULL,
+        '#required' => TRUE,
+      ],
+
+      self::FORSENDELSES_TYPE_IDENTIFIKATOR => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Forsendelsestypeidentifikator'),
+        '#default_value' => $sender[self::FORSENDELSES_TYPE_IDENTIFIKATOR] ?? NULL,
         '#required' => TRUE,
       ],
     ];
