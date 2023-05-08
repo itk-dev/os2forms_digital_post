@@ -16,7 +16,7 @@ services:
     arguments:
       - "@entity_type.manager"
       - "@renderer"
-      - "@os2forms_cpr_lookup.service"
+      - "@plugin.manager.os2web_datalookup"
       - "@os2forms_digital_post.print_service_consumer"
       - "@os2forms_digital_post.template_manager"
       - "@logger.factory"

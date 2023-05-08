@@ -5,13 +5,14 @@ namespace Drupal\os2forms_digital_post\Helper;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Render\Renderer;
-use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
-use Drupal\os2forms_cpr_lookup\Service\CprServiceInterface;
 use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
 use Drupal\os2forms_digital_post\Exception\CprElementNotFoundInSubmissionException;
+use Drupal\os2forms_digital_post\Exception\RuntimeException;
 use Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException;
 use Drupal\os2forms_digital_post\Manager\TemplateManager;
 use Drupal\os2web_datalookup\LookupResult\CprLookupResult;
+use Drupal\os2web_datalookup\Plugin\DataLookupManager;
+use Drupal\os2web_datalookup\Plugin\os2web\DataLookup\DataLookupInterfaceCpr;
 use Drupal\webform\WebformSubmissionInterface;
 
 /**
@@ -34,11 +35,11 @@ final class WebformHelper {
   protected $renderer;
 
   /**
-   * The cpr service.
+   * The data lookup manager.
    *
-   * @var \Drupal\os2forms_cpr_lookup\Service\CprServiceInterface
+   * @var \Drupal\os2web_datalookup\Plugin\DataLookupManager
    */
-  protected $cprService;
+  protected $dataLookupManager;
 
   /**
    * The print service consumer.
@@ -64,10 +65,10 @@ final class WebformHelper {
   /**
    * Constructor.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Renderer $renderer, CprServiceInterface $cprService, PrintServiceConsumer $printServiceConsumer, TemplateManager $templateManager, LoggerChannelFactoryInterface $loggerChannelFactory) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, Renderer $renderer, DataLookupManager $dataLookupManager, PrintServiceConsumer $printServiceConsumer, TemplateManager $templateManager, LoggerChannelFactoryInterface $loggerChannelFactory) {
     $this->entityTypeManager = $entity_type_manager;
     $this->renderer = $renderer;
-    $this->cprService = $cprService;
+    $this->dataLookupManager = $dataLookupManager;
     $this->printServiceConsumer = $printServiceConsumer;
     $this->templateManager = $templateManager;
     $this->logger = $loggerChannelFactory->get('os2forms_digital_post');
@@ -148,9 +149,12 @@ final class WebformHelper {
       throw new CprElementNotFoundInSubmissionException();
     }
 
-    /** @var \Drupal\os2forms_cpr_lookup\CPR\CprServiceResult $cprSearchResult */
-    $cprSearchResult = $this->cprService->search($submissionData[$handlerConfiguration['cpr_element']]);
-    $context = $this->getTemplateContext($webform_submission, $cprSearchResult, $handlerConfiguration);
+    $instance = $this->dataLookupManager->createDefaultInstanceByGroup('cpr_lookup');
+    if (!($instance instanceof DataLookupInterfaceCpr)) {
+      throw new RuntimeException('Cannot get CPR data lookup instance');
+    }
+    $cprLookupResult = $instance->lookup($submissionData[$handlerConfiguration['cpr_element']]);
+    $context = $this->getTemplateContext($webform_submission, $cprLookupResult, $handlerConfiguration);
     $result = FALSE;
 
     switch ($handlerConfiguration['channel']) {
@@ -159,14 +163,14 @@ final class WebformHelper {
           $handlerConfiguration['channel'],
           $handlerConfiguration['priority'],
           $submissionData[$handlerConfiguration['cpr_element']],
-          $cprSearchResult->getName(),
+          $cprLookupResult->getName(),
           NULL,
-          $cprSearchResult->getStreetName(),
-          $cprSearchResult->getHouseNumber(),
+          $cprLookupResult->getStreet(),
+          $cprLookupResult->getHouseNr(),
           $floor,
           NULL,
           NULL,
-          $cprSearchResult->getPostalCode(),
+          $cprLookupResult->getPostalCode(),
           NULL,
           NULL,
           'DK',
