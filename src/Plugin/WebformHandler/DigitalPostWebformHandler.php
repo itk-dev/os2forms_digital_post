@@ -34,39 +34,11 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
   private const DOCUMENT_TITLE_MAX_LENGTH = 32;
 
   /**
-   * The token manager.
-   *
-   * @var \Drupal\webform\WebformTokenManagerInterface
-   */
-  protected $tokenManager;
-
-  /**
-   * The webform helper.
-   *
-   * @var \Drupal\os2forms_digital_post\WebformHelper
-   */
-  protected $webformHelper;
-
-  /**
    * The template manager.
    *
    * @var \Drupal\os2forms_digital_post\Manager\TemplateManager
    */
   protected $templateManager;
-
-  /**
-   * The print service consumer.
-   *
-   * @var \Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer
-   */
-  protected $printServiceConsumer;
-
-  /**
-   * The cpr service.
-   *
-   * @var \Drupal\os2forms_cpr_lookup\Service\CprServiceInterface
-   */
-  protected $cprService;
 
   /**
    * {@inheritdoc}
@@ -79,11 +51,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
     $instance->renderer = $container->get('renderer');
     $instance->entityTypeManager = $container->get('entity_type.manager');
     $instance->conditionsValidator = $container->get('webform_submission.conditions_validator');
-    $instance->tokenManager = $container->get('webform.token_manager');
-    $instance->webformHelper = $container->get('os2forms_digital_post.webform_helper');
     $instance->templateManager = $container->get('os2forms_digital_post.template_manager');
-    $instance->printServiceConsumer = $container->get('os2forms_digital_post.print_service_consumer');
-    $instance->cprService = $container->get('os2forms_cpr_lookup.service');
 
     $instance->setConfiguration($configuration);
 
