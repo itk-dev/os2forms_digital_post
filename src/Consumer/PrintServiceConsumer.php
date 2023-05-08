@@ -26,6 +26,11 @@ use ItkDev\AzureKeyVault\KeyVault\VaultSecret;
 use ItkDev\Serviceplatformen\Certificate\AzureKeyVaultCertificateLocator;
 use ItkDev\Serviceplatformen\Certificate\CertificateLocatorInterface;
 use WsdlToPhp\PackageBase\AbstractSoapClientBase;
+use GuzzleHttp\Client;
+use Http\Factory\Guzzle\RequestFactory;
+use ItkDev\AzureKeyVault\Authorisation\VaultToken;
+use Http\Adapter\Guzzle7\Client as GuzzleAdapter;
+use ItkDev\AzureKeyVault\KeyVault\VaultSecret;
 
 /**
  * Print service consumer.
