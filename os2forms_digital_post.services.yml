@@ -31,12 +31,12 @@ services:
 
   Drupal\os2forms_digital_post\Helper\MeMoHelper:
     arguments:
-      - "@plugin.manager.element_info"
+      - "@plugin.manager.webform.element"
       - "@webform.token_manager"
 
   Drupal\os2forms_digital_post\Helper\ForsendelseHelper:
     arguments:
-      - "@plugin.manager.element_info"
+      - "@plugin.manager.webform.element"
       - "@webform.token_manager"
 
   Drupal\os2forms_digital_post\Helper\WebformHelperSF1601:
