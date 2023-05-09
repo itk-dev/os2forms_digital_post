@@ -26,11 +26,6 @@ use ItkDev\AzureKeyVault\KeyVault\VaultSecret;
 use ItkDev\Serviceplatformen\Certificate\AzureKeyVaultCertificateLocator;
 use ItkDev\Serviceplatformen\Certificate\CertificateLocatorInterface;
 use WsdlToPhp\PackageBase\AbstractSoapClientBase;
-use GuzzleHttp\Client;
-use Http\Factory\Guzzle\RequestFactory;
-use ItkDev\AzureKeyVault\Authorisation\VaultToken;
-use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
-use ItkDev\AzureKeyVault\KeyVault\VaultSecret;
 
 /**
  * Print service consumer.
@@ -67,7 +62,7 @@ class PrintServiceConsumer {
   /**
    * The UUID generator.
    *
-   * @var UuidInterface
+   * @var \Drupal\Component\Uuid\UuidInterface
    */
   private $uuid;
 
@@ -87,6 +82,7 @@ class PrintServiceConsumer {
     $this->guzzleClient = $guzzleClient;
     $this->lock = $lock;
     $this->state = $state;
+    // @phpstan-ignore-next-line
     $this->uuid = \Drupal::service('uuid');
   }
 
@@ -106,13 +102,13 @@ class PrintServiceConsumer {
     string $mailDeliverySublocationIdentifier = NULL,
     string $postCodeIdentifier = NULL,
     string $districtSubdivisionIdentifier = NULL,
-    string $postOfficeBoxIdentifier = NULL,
+    int $postOfficeBoxIdentifier = NULL,
     string $countryIdentificationCode = NULL,
     string $filFormatNavn = NULL,
     string $meddelelseIndholdData = NULL,
     string $titelTekst = NULL,
     string $brevDato = NULL
-  ) {
+  ): bool {
 
     if (!$this->acquireLock()) {
       $this->waitLock();
@@ -182,6 +178,7 @@ class PrintServiceConsumer {
     $client = new Afsend([
       AbstractSoapClientBase::WSDL_URL => $this->config->get('service_contract'),
       AbstractSoapClientBase::WSDL_CLASSMAP => ClassMap::get(),
+      // @phpstan-ignore-next-line
       AbstractSoapClientBase::WSDL_LOCAL_CERT => $certificateLocator->getAbsolutePathToCertificate(),
       AbstractSoapClientBase::WSDL_LOCATION => $this->config->get('service_endpoint'),
     ]);
@@ -192,7 +189,7 @@ class PrintServiceConsumer {
 
     if (FALSE === $response) {
       $lastError = $client->getLastError();
-      /** @var SoapFault $soapError */
+      /** @var \SoapFault $soapError */
       $soapError = $lastError['Drupal\os2forms_digital_post\Client\ServiceType\Afsend::afsendBrev'];
       // Should maybe log this instead!
       throw new \Exception($soapError->getMessage(), $soapError->getCode());
@@ -295,6 +292,7 @@ class PrintServiceConsumer {
     $client = new Afsend([
       AbstractSoapClientBase::WSDL_URL => $this->config->get('service_contract'),
       AbstractSoapClientBase::WSDL_CLASSMAP => ClassMap::get(),
+      // @phpstan-ignore-next-line
       AbstractSoapClientBase::WSDL_LOCAL_CERT => $certificateLocator->getAbsolutePathToCertificate(),
       AbstractSoapClientBase::WSDL_LOCATION => $this->config->get('service_endpoint'),
     ]);
@@ -305,7 +303,7 @@ class PrintServiceConsumer {
 
     if (FALSE === $response) {
       $lastError = $client->getLastError();
-      /** @var SoapFault $soapError */
+      /** @var \SoapFault $soapError */
       $soapError = $lastError['Drupal\os2forms_digital_post\Client\ServiceType\Afsend::afsendBrev'];
       // Should maybe log this instead!
       throw new \Exception($soapError->getMessage(), $soapError->getCode());
@@ -344,7 +342,7 @@ class PrintServiceConsumer {
   /**
    * Release lock.
    */
-  protected function releaseLock() {
+  protected function releaseLock(): void {
     $this->lock->release($this->lockName);
   }
 

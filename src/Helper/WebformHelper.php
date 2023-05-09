@@ -4,7 +4,7 @@ namespace Drupal\os2forms_digital_post\Helper;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
-use Drupal\Core\Render\Renderer;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer;
 use Drupal\os2forms_digital_post\Exception\CprElementNotFoundInSubmissionException;
 use Drupal\os2forms_digital_post\Exception\RuntimeException;
@@ -30,7 +30,7 @@ final class WebformHelper {
   /**
    * The drupal renderer.
    *
-   * @var Drupal\Core\Render\Renderer
+   * @var \Drupal\Core\Render\RendererInterface
    */
   protected $renderer;
 
@@ -65,7 +65,7 @@ final class WebformHelper {
   /**
    * Constructor.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Renderer $renderer, DataLookupManager $dataLookupManager, PrintServiceConsumer $printServiceConsumer, TemplateManager $templateManager, LoggerChannelFactoryInterface $loggerChannelFactory) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, RendererInterface $renderer, DataLookupManager $dataLookupManager, PrintServiceConsumer $printServiceConsumer, TemplateManager $templateManager, LoggerChannelFactoryInterface $loggerChannelFactory) {
     $this->entityTypeManager = $entity_type_manager;
     $this->renderer = $renderer;
     $this->dataLookupManager = $dataLookupManager;
@@ -76,8 +76,10 @@ final class WebformHelper {
 
   /**
    * Get template context.
+   *
+   * @phpstan-return array<string, mixed>
    */
-  public function getTemplateContext(WebformSubmissionInterface $webformSubmission, CprLookupResult $cprLookupResult, array $configuration = []) {
+  public function getTemplateContext(WebformSubmissionInterface $webformSubmission, CprLookupResult $cprLookupResult): array {
     $webform = $webformSubmission->getWebform();
 
     $view_builder = $this->entityTypeManager->getViewBuilder('webform_submission');
@@ -126,9 +128,10 @@ final class WebformHelper {
    *   A PluginNotFoundException.
    * @throws \ItkDev\Serviceplatformen\Service\Exception\ServiceException
    *   A ServiceException.
+   *
+   * @phpstan-param array<string, mixed> $handlerConfiguration
    */
-  public function sendDigitalPost(string $submissionId, array $handlerConfiguration) {
-    /** @var \Drupal\webform\Entity\WebformSubmission $submission */
+  public function sendDigitalPost(string $submissionId, array $handlerConfiguration): void {
     $webform_submission = $this->getSubmission($submissionId);
     if (empty($webform_submission)) {
       $this->logger->error(
@@ -154,7 +157,7 @@ final class WebformHelper {
       throw new RuntimeException('Cannot get CPR data lookup instance');
     }
     $cprLookupResult = $instance->lookup($submissionData[$handlerConfiguration['cpr_element']]);
-    $context = $this->getTemplateContext($webform_submission, $cprLookupResult, $handlerConfiguration);
+    $context = $this->getTemplateContext($webform_submission, $cprLookupResult);
     $result = FALSE;
 
     switch ($handlerConfiguration['channel']) {
@@ -167,7 +170,7 @@ final class WebformHelper {
           NULL,
           $cprLookupResult->getStreet(),
           $cprLookupResult->getHouseNr(),
-          $floor,
+          $cprLookupResult->getFloor(),
           NULL,
           NULL,
           $cprLookupResult->getPostalCode(),
@@ -203,7 +206,7 @@ final class WebformHelper {
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
    */
-  private function getSubmission(string $submissionId) {
+  private function getSubmission(string $submissionId): ?WebformSubmissionInterface {
     $storage = $this->entityTypeManager->getStorage('webform_submission');
     return $storage->load($submissionId);
   }

@@ -41,6 +41,8 @@ final class Settings {
 
   /**
    * Get sender.
+   *
+   * @phpstan-return array<string, mixed>
    */
   public function getSender(): array {
     $value = $this->get('sender');
@@ -49,6 +51,8 @@ final class Settings {
 
   /**
    * Get certificate.
+   *
+   * @phpstan-return array<string, mixed>
    */
   public function getCertificate(): array {
     $value = $this->get('certificate');
@@ -57,6 +61,8 @@ final class Settings {
 
   /**
    * Get processing.
+   *
+   * @phpstan-return array<string, mixed>
    */
   public function getProcessing(): array {
     $value = $this->get('processing');

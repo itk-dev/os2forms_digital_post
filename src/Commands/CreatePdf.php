@@ -18,7 +18,7 @@ class CreatePdf extends DrushCommands {
   /**
    * The os2forms_digital_post webform helper.
    *
-   * @var \Drupal\os2forms_digital_post\WebformHelper
+   * @var \Drupal\os2forms_digital_post\Helper\WebformHelper
    */
   protected WebformHelper $webformHelper;
 
@@ -61,12 +61,14 @@ class CreatePdf extends DrushCommands {
    *
    * @throws \Drupal\Component\Plugin\Exception\InvalidPluginDefinitionException
    * @throws \Drupal\Component\Plugin\Exception\PluginNotFoundException
+   *
+   * @phpstan-param array<string, mixed> $options
    */
   public function create($template, array $options = [
     'submission_id' => 0,
     'file_location' => '',
     'file_name' => 'test.pdf',
-  ]) {
+  ]): void {
     $webform_submission = $this->entityTypeManager->getStorage('webform_submission')->load($options['submission_id']);
 
     if (!$webform_submission) {
@@ -84,7 +86,7 @@ class CreatePdf extends DrushCommands {
     $cprServiceResult->setPostalCode('8000');
     $cprServiceResult->setCity('Aarhus C');
 
-    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprServiceResult, []);
+    $context = $this->webformHelper->getTemplateContext($webform_submission, $cprServiceResult);
 
     $pdf = $this->templateManager->renderPdf($template, $context);
     $filePath = dirname(DRUPAL_ROOT) . $options['file_location'] . '/' . $options['file_name'];

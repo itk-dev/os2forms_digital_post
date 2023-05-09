@@ -2,9 +2,10 @@
 
 namespace Drupal\os2forms_digital_post\Helper;
 
-use Drupal\Core\Render\ElementInfoManagerInterface;
+use DigitalPost\MeMo\Message;
 use Drupal\os2forms_digital_post\Exception\InvalidAttachmentElementException;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
+use Drupal\webform\Plugin\WebformElementManagerInterface;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformTokenManagerInterface;
 use Drupal\webform_attachment\Element\WebformAttachmentBase;
@@ -28,7 +29,7 @@ abstract class AbstractMessageHelper {
    * Constructor.
    */
   public function __construct(
-    readonly protected ElementInfoManagerInterface $elementInfoManager,
+    readonly protected WebformElementManagerInterface $elementInfoManager,
     readonly protected WebformTokenManagerInterface $webformTokenManager
   ) {
   }
@@ -37,6 +38,9 @@ abstract class AbstractMessageHelper {
    * Get main document.
    *
    * @see WebformAttachmentController::download()
+   *
+   * @phpstan-param array<string, mixed> $handlerSettings
+   * @phpstan-return array<string, mixed>
    */
   protected function getMainDocument(WebformSubmissionInterface $submission, array $handlerSettings): array {
     // Lifted from Drupal\webform_attachment\Controller\WebformAttachmentController::download.
@@ -70,6 +74,8 @@ abstract class AbstractMessageHelper {
 
   /**
    * Check if a document is a PDF document.
+   *
+   * @phpstan-param array<string, mixed> $document
    */
   protected function isPdf(array $document): bool {
     return self::MIME_TYPE_PDF === $document[self::DOCUMENT_MIME_TYPE];

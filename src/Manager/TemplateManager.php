@@ -62,6 +62,8 @@ class TemplateManager implements TemplateManagerInterface {
 
   /**
    * {@inheritDoc}
+   *
+   * @phpstan-param array<string, mixed> $context
    */
   public function renderHtml(string $template, array $context = []): string {
 
@@ -73,6 +75,8 @@ class TemplateManager implements TemplateManagerInterface {
 
   /**
    * {@inheritDoc}
+   *
+   * @phpstan-param array<string, mixed> $context
    */
   public function renderPdf(string $template, array $context = [], bool $stream = FALSE): string {
 
@@ -104,7 +108,7 @@ class TemplateManager implements TemplateManagerInterface {
   /**
    * Get path to base64encoded logo.
    */
-  private function getPathToBase64EncodedLogo($template): string {
+  private function getPathToBase64EncodedLogo(string $template): string {
     $pathToLogo = $this->getPathToTemplate($template) . '/logo.png';
 
     if (!file_exists($pathToLogo)) {

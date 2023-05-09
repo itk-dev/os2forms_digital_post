@@ -38,19 +38,20 @@
         }
     },
     "require-dev": {
-        "wsdltophp/packagegenerator": "^4.0",
-        "drupal/coder": "^8.3",
         "dealerdirect/phpcodesniffer-composer-installer": "^0.7.1",
-        "mglaman/drupal-check": "^1.4",
-        "phpunit/phpunit": "^9.5"
+        "drupal/coder": "^8.3",
+        "mglaman/phpstan-drupal": "^1.1",
+        "phpstan/extension-installer": "^1.3",
+        "phpstan/phpstan-deprecation-rules": "^1.1",
+        "phpunit/phpunit": "^9.5",
+        "wsdltophp/packagegenerator": "^4.0"
     },
     "scripts": {
-        "code-analysis/drupal-check": [
-            "# @see https://github.com/mglaman/drupal-check/issues/261#issuecomment-1030141772 for details on exclude-dir value",
-            "drupal-check --deprecations --analysis --exclude-dir='vendor,*/Client/*' *.* src"
+        "code-analysis/phpstan": [
+            "phpstan analyse"
         ],
         "code-analysis": [
-            "@code-analysis/drupal-check"
+            "@code-analysis/phpstan"
         ],
         "coding-standards-check/phpcs": [
             "phpcs --standard=phpcs.xml.dist"
@@ -72,7 +73,8 @@
             "vaimo/composer-patches": true,
             "cweagans/composer-patches": true,
             "zaporylie/composer-drupal-optimizations": true,
-            "simplesamlphp/composer-module-installer": true
+            "simplesamlphp/composer-module-installer": true,
+            "phpstan/extension-installer": true
         }
     }
 }

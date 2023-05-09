@@ -12,6 +12,8 @@ interface TemplateManagerInterface {
    *
    * @return array
    *   List of available templates.
+   *
+   * @phpstan-return array<string, string>
    */
   public function getAvailableTemplates(): array;
 
