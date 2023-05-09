@@ -57,13 +57,15 @@ final class CommandsSF1601 extends DrushCommands {
    *
    * @command os2forms_digital_post:digital-post:send
    * @usage os2forms_digital_post:digital-post:send --help
+   *
+   * @phpstan-param array<string, mixed> $options
    */
   public function send(int $submissionId, string $handlerId, array $options = [
     'handler-settings' => NULL,
     'recipient-element' => NULL,
     'attachment-element' => NULL,
     'submission-data' => NULL,
-  ]) {
+  ]): void {
     [$submission, $handlerSettings, $submissionData] = $this->getData($submissionId, $handlerId, $options);
 
     $this->webformHelper->sendDigitalPost($submission, $handlerSettings, $submissionData);
@@ -90,6 +92,8 @@ final class CommandsSF1601 extends DrushCommands {
    *
    * @command os2forms_digital_post:digital-post:memo-show
    * @usage os2forms_digital_post:digital-post:memo-show --help
+   *
+   * @phpstan-param array<string, mixed> $options
    */
   public function meMoShow(int $submissionId, string $handlerId, array $options = [
     'handler-settings' => NULL,
@@ -97,7 +101,7 @@ final class CommandsSF1601 extends DrushCommands {
     'attachment-element' => NULL,
     'submission-data' => NULL,
     'dump' => NULL,
-  ]) {
+  ]): void {
     [$submission, $handlerSettings] = $this->getData($submissionId, $handlerId, $options);
 
     $handlerMessageSettings = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE];
@@ -147,6 +151,8 @@ final class CommandsSF1601 extends DrushCommands {
    *
    * @command os2forms_digital_post:digital-post:forsendelse-show
    * @usage os2forms_digital_post:digital-post:forsendelse-show --help
+   *
+   * @phpstan-param array<string, mixed> $options
    */
   public function forsendelseShow(int $submissionId, string $handlerId, array $options = [
     'handler-settings' => NULL,
@@ -154,7 +160,7 @@ final class CommandsSF1601 extends DrushCommands {
     'attachment-element' => NULL,
     'submission-data' => NULL,
     'dump' => NULL,
-  ]) {
+  ]): void {
     [$submission, $handlerSettings] = $this->getData($submissionId, $handlerId, $options);
 
     $handlerMessageSettings = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE];
@@ -181,7 +187,7 @@ final class CommandsSF1601 extends DrushCommands {
   /**
    * Dump MeMo message stuff.
    */
-  private function meMoDump(string $dump, Message $message) {
+  private function meMoDump(string $dump, Message $message): void {
     switch ($dump) {
       case 'main-document-file-info':
         foreach ($message->getMessageBody()->getMainDocument()->getFile() as $file) {
@@ -213,24 +219,31 @@ final class CommandsSF1601 extends DrushCommands {
   /**
    * Dump forsendelse stuff.
    */
-  private function forsendelseDump(string $dump, ForsendelseI $forsendelse) {
+  private function forsendelseDump(string $dump, ForsendelseI $forsendelse): void {
     switch ($dump) {
       case self::HIDDEN_CONTENT:
+        // @todo What does really make sense to dump?
         break;
 
       default:
         throw new InvalidOptionException(sprintf(
           'Invalid dump option %s. Must be one of %s',
           json_encode($dump),
-          implode(', ', array_map('json_encode', self::MEMO_DUMP_OPTION_VALUES))
+          implode(', ', array_map('json_encode', self::FORSENDELSE_DUMP_OPTION_VALUES))
         ));
     }
   }
 
   /**
    * Get data.
+   *
+   * @return array
+   *   [submission, handlerSettings, submissionData]
+   *
+   * @phpstan-param array<string, mixed> $options
+   * @phpstan-return array<int, mixed>
    */
-  private function getData(int $submissionId, string $handlerId, array $options) {
+  private function getData(int $submissionId, string $handlerId, array $options): array {
     $submission = $this->webformHelper->loadSubmission($submissionId);
     if (NULL === $submission) {
       throw new InvalidArgumentException(sprintf('Cannot load submission %d', $submissionId));

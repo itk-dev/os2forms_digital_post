@@ -44,7 +44,7 @@ class BeskedfordelerHelper {
   /**
    * Save MeMo message in database.
    */
-  public function createMessage(int $submissionId, MeMoMessage $message, string $receipt) {
+  public function createMessage(int $submissionId, MeMoMessage $message, string $receipt): int {
     $messageUUID = $message->getMessageHeader()->getMessageUUID();
     $message = $this->meMoHelper->message2dom($message)->saveXML();
 
@@ -69,6 +69,7 @@ class BeskedfordelerHelper {
    *   The message.
    */
   public function loadMessage(string $messageUUID): ?Message {
+    // @phpstan-ignore-next-line (fetchObject invoked with 2 parameters)
     return $this->database
       ->select(self::TABLE_NAME, 'm')
       ->fields('m')
@@ -102,7 +103,7 @@ class BeskedfordelerHelper {
    * @param array|WebformSubmissionInterface[] $submissions
    *   The submissions.
    */
-  public function deleteMessages(array $submissions) {
+  public function deleteMessages(array $submissions): void {
     $submissionIds = array_map(static function (WebformSubmissionInterface $submission) {
       return $submission->id();
     }, $submissions);
@@ -166,7 +167,7 @@ class BeskedfordelerHelper {
    *
    * Creates beskedfordeler table.
    */
-  public function update9002() {
+  public function update9002(): void {
     $spec = [
       'description' => 'OSForms digital post beskedfordeler',
       'fields' => [

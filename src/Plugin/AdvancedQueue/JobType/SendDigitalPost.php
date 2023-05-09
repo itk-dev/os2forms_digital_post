@@ -17,7 +17,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   label = @Translation("Send digital post"),
  * )
  */
-class SendDigitalPost extends JobTypeBase implements ContainerFactoryPluginInterface {
+final class SendDigitalPost extends JobTypeBase implements ContainerFactoryPluginInterface {
   /**
    * The webform helper.
    *
@@ -27,6 +27,8 @@ class SendDigitalPost extends JobTypeBase implements ContainerFactoryPluginInter
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $configuration
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
@@ -39,6 +41,8 @@ class SendDigitalPost extends JobTypeBase implements ContainerFactoryPluginInter
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $configuration
    */
   public function __construct(
     array $configuration,

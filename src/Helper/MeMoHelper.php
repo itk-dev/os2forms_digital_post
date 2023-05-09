@@ -14,7 +14,6 @@ use DigitalPost\MeMo\MessageBody;
 use DigitalPost\MeMo\MessageHeader;
 use DigitalPost\MeMo\Recipient;
 use DigitalPost\MeMo\Sender;
-use Drupal\os2forms_digital_post\Exception\InvalidRecipientDataException;
 use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drupal\os2web_datalookup\LookupResult\CompanyLookupResult;
@@ -30,8 +29,11 @@ class MeMoHelper extends AbstractMessageHelper {
 
   /**
    * Build MeMo message.
+   *
+   * @phpstan-param array<string, mixed> $options
+   * @phpstan-param array<string, mixed> $handlerSettings
    */
-  public function buildMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, array $submissionData = [], CprLookupResult|CompanyLookupResult|null $recipientData = NULL): Message {
+  public function buildMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, CprLookupResult|CompanyLookupResult|null $recipientData = NULL): Message {
     $messageUUID = Serializer::createUuid();
     $messageID = Serializer::createUuid();
 
@@ -92,7 +94,7 @@ class MeMoHelper extends AbstractMessageHelper {
   /**
    * Enrich recipient with additional data from a lookup.
    */
-  private function enrichRecipient(Recipient $recipient, $recipientData = NULL): Recipient {
+  private function enrichRecipient(Recipient $recipient, CprLookupResult|CompanyLookupResult|null $recipientData): Recipient {
     if ($recipientData instanceof CprLookupResult) {
       $name = $recipientData->getName();
       $recipient->setLabel($name);
@@ -136,15 +138,14 @@ class MeMoHelper extends AbstractMessageHelper {
 
       $recipient->setAttentionData($attentionData);
     }
-    elseif (NULL !== $recipientData) {
-      throw new InvalidRecipientDataException(sprintf('Cannot handle recipient data of type %s', is_scalar($recipientData) ? gettype($recipientData) : get_class($recipientData)));
-    }
 
     return $recipient;
   }
 
   /**
    * Build action.
+   *
+   * @phpstan-param array<string, mixed> $options
    */
   private function buildAction(array $options, WebformSubmissionInterface $submission): Action {
     $label = $this->replaceTokens($options['label'], $submission);

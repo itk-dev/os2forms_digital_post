@@ -5,7 +5,7 @@ namespace Drupal\os2forms_digital_post\Helper;
 use Drupal\advancedqueue\Entity\QueueInterface;
 use Drupal\advancedqueue\Job;
 use Drupal\advancedqueue\JobResult;
-use Drupal\Core\Config\Entity\ConfigEntityStorage;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
@@ -44,9 +44,9 @@ final class WebformHelperSF1601 implements LoggerInterface {
   /**
    * The queue storage.
    *
-   * @var \Drupal\Core\Config\Entity\ConfigEntityStorage|\Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected ConfigEntityStorage $queueStorage;
+  protected EntityStorageInterface $queueStorage;
 
   /**
    * The logger.
@@ -92,7 +92,11 @@ final class WebformHelperSF1601 implements LoggerInterface {
    *   Submission data. Only for overriding during testing and development.
    *
    * @return array
-   *   [The response, The MeMo message].
+   *   [The response, The kombi post message].
+   *
+   * @phpstan-param array<string, mixed> $handlerSettings
+   * @phpstan-param array<string, mixed> $submissionData
+   * @phpstan-return array<int, mixed>
    */
   public function sendDigitalPost(WebformSubmissionInterface $submission, array $handlerSettings, array $submissionData = []): array {
     $submissionData = $submissionData + $submission->getData();
@@ -136,7 +140,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
     // Remove all non-digits from recipient identifier.
     $recipientIdentifier = preg_replace('/[^\d]+/', '', $recipientIdentifier);
 
-    /** @var \Drupal\os2web_datalookup\LookupResult\CprLookupResult|CompanyLookupResult|null $lookupResult */
+    /** @var \Drupal\os2web_datalookup\LookupResult\CprLookupResult|\Drupal\os2web_datalookup\LookupResult\CompanyLookupResult|null $lookupResult */
     $lookupResult = NULL;
 
     if (preg_match('/^\d{8}$/', $recipientIdentifier)) {
@@ -173,7 +177,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
       WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
-    $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings, $submissionData, $lookupResult);
+    $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings, $lookupResult);
     $forsendelseOptions = [
       self::RECIPIENT_IDENTIFIER_TYPE => $recipientIdentifierType,
       self::RECIPIENT_IDENTIFIER => $recipientIdentifier,
@@ -185,7 +189,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
       WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
-    $forsendelse = $this->forsendelseHelper->buildForsendelse($submission, $forsendelseOptions, $handlerSettings, $submissionData, $lookupResult);
+    $forsendelse = $this->forsendelseHelper->buildForsendelse($submission, $forsendelseOptions, $handlerSettings, $lookupResult);
 
     $options = [
       'test_mode' => (bool) $this->settings->getTestMode(),
@@ -212,16 +216,19 @@ final class WebformHelperSF1601 implements LoggerInterface {
   /**
    * Load queue.
    */
-  private function loadQueue():QueueInterface {
+  private function loadQueue(): QueueInterface {
     $processingSettings = $this->settings->getProcessing();
 
-    return $this->queueStorage->load($processingSettings['queue'] ?? 'os2forms_digital_post');
+    /** @var \Drupal\advancedqueue\Entity\QueueInterface $queue */
+    $queue = $this->queueStorage->load($processingSettings['queue'] ?? 'os2forms_digital_post');
+
+    return $queue;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function log($level, $message, array $context = []) {
+  public function log($level, $message, array $context = []): void {
     $this->logger->log($level, $message, $context);
     // @see https://www.drupal.org/node/3020595
     if (isset($context['webform_submission']) && $context['webform_submission'] instanceof WebformSubmissionInterface) {
@@ -233,6 +240,8 @@ final class WebformHelperSF1601 implements LoggerInterface {
    * Create a job.
    *
    * @see self::processJob()
+   *
+   * @phpstan-param array<string, mixed> $handlerConfiguration
    */
   public function createJob(WebformSubmissionInterface $webformSubmission, array $handlerConfiguration): ?Job {
     $context = [
@@ -291,7 +300,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
       $this->notice('Digital post sent', [
         'handler_id' => 'os2forms_digital_post',
         'operation' => 'digital post send',
-        'webform_submission' => $submission ?? NULL,
+        'webform_submission' => $submission,
       ]);
 
       return JobResult::success();
@@ -301,7 +310,6 @@ final class WebformHelperSF1601 implements LoggerInterface {
         '@message' => $e->getMessage(),
         'handler_id' => 'os2forms_digital_post',
         'operation' => 'digital post send',
-        'webform_submission' => $submission ?? NULL,
       ]);
 
       return JobResult::failure($e->getMessage());
@@ -310,8 +318,10 @@ final class WebformHelperSF1601 implements LoggerInterface {
 
   /**
    * Process Beskedfordeler data.
+   *
+   * @phpstan-param array<string, mixed> $data
    */
-  public function processBeskedfordelerData(int $submissionId, array $data) {
+  public function processBeskedfordelerData(int $submissionId, array $data): void {
     $webformSubmission = $this->loadSubmission($submissionId);
     if (NULL !== $webformSubmission) {
       $context = [
@@ -342,8 +352,10 @@ final class WebformHelperSF1601 implements LoggerInterface {
    * Proxy for BeskedfordelerHelper::deleteMessages().
    *
    * @see BeskedfordelerHelper::deleteMessages()
+   *
+   * @phpstan-param array<int, \Drupal\webform\WebformSubmissionInterface> $webformSubmissions
    */
-  public function deleteMessages(array $webformSubmissions) {
+  public function deleteMessages(array $webformSubmissions): void {
     $this->beskedfordelerHelper->deleteMessages($webformSubmissions);
   }
 

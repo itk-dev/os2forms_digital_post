@@ -26,8 +26,11 @@ class ForsendelseHelper extends AbstractMessageHelper {
 
   /**
    * Build forsendelse.
+   *
+   * @phpstan-param array<string, mixed> $options
+   * @phpstan-param array<string, mixed> $handlerSettings
    */
-  public function buildForsendelse(WebformSubmissionInterface $submission, array $options, array $handlerSettings, array $submissionData = [], CprLookupResult|CompanyLookupResult|null $recipientData = NULL): ForsendelseI {
+  public function buildForsendelse(WebformSubmissionInterface $submission, array $options, array $handlerSettings, CprLookupResult|CompanyLookupResult|null $recipientData = NULL): ForsendelseI {
     $forsendelse = new ForsendelseI();
 
     $label = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
@@ -67,7 +70,7 @@ class ForsendelseHelper extends AbstractMessageHelper {
   /**
    * Create modtager.
    */
-  private function createModtager($recipient): ForsendelseModtager {
+  private function createModtager(CprLookupResult|CompanyLookupResult|null $recipient): ForsendelseModtager {
     $afsendelseModtager = new AfsendelseModtager();
     $modtagerAdresse = (new ModtagerAdresse());
 
@@ -84,10 +87,10 @@ class ForsendelseHelper extends AbstractMessageHelper {
           ->setScheme('iso3166-alpha2')
         );
 
-      if ($floor = trim($recipient->getFloor() ?? '')) {
+      if ($floor = trim($recipient->getFloor())) {
         $modtagerAdresse->setFloorIdentifier($floor);
       }
-      if ($suite = trim($recipient->getApartmentNr() ?? '')) {
+      if ($suite = trim($recipient->getApartmentNr())) {
         $modtagerAdresse->setSuiteIdentifier($suite);
       }
     }
@@ -103,10 +106,10 @@ class ForsendelseHelper extends AbstractMessageHelper {
           ->setScheme('iso3166-alpha2')
         );
 
-      if ($floor = trim($recipient->getFloor() ?? '')) {
+      if ($floor = trim($recipient->getFloor())) {
         $modtagerAdresse->setFloorIdentifier($floor);
       }
-      if ($suite = trim($recipient->getApartmentNr() ?? '')) {
+      if ($suite = trim($recipient->getApartmentNr())) {
         $modtagerAdresse->setSuiteIdentifier($suite);
       }
     }

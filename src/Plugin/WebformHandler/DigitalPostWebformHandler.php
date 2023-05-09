@@ -24,7 +24,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
  *   submission = \Drupal\webform\Plugin\WebformHandlerInterface::SUBMISSION_REQUIRED,
  * )
  */
-class DigitalPostWebformHandler extends WebformHandlerBase {
+final class DigitalPostWebformHandler extends WebformHandlerBase {
   /**
    * Maximum length of title on digital post document.
    *
@@ -42,6 +42,8 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $configuration
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
@@ -60,8 +62,10 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-return array<string, mixed>
    */
-  public function defaultConfiguration() {
+  public function defaultConfiguration(): array {
     return [
       'message' => 'This is a custom message.',
       'debug' => FALSE,
@@ -70,8 +74,11 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
+   * @phpstan-return array<string, mixed>
    */
-  public function buildConfigurationForm(array $form, FormStateInterface $form_state) {
+  public function buildConfigurationForm(array $form, FormStateInterface $form_state): array {
     $this->getLogger()->debug('This was the form: ' . print_r($this->getWebform()->getElementsDecoded(), TRUE));
 
     $availableElements = $this->getAvailableElements($this->getWebform()->getElementsDecoded());
@@ -156,6 +163,9 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
 
   /**
    * Get available elements.
+   *
+   * @phpstan-param array<string, mixed> $elements
+   * @phpstan-return array<string, mixed>
    */
   private function getAvailableElements(array $elements): array {
     $availableElements = [];
@@ -178,8 +188,10 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
    */
-  public function submitConfigurationForm(array &$form, FormStateInterface $form_state) {
+  public function submitConfigurationForm(array &$form, FormStateInterface $form_state): void {
     parent::submitConfigurationForm($form, $form_state);
     $this->configuration['channel'] = $form_state->getValue('channel');
     $this->configuration['priority'] = $form_state->getValue('priority');
@@ -192,29 +204,37 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $elements
    */
-  public function alterElements(array &$elements, WebformInterface $webform) {
+  public function alterElements(array &$elements, WebformInterface $webform): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $settings
    */
-  public function overrideSettings(array &$settings, WebformSubmissionInterface $webform_submission) {
+  public function overrideSettings(array &$settings, WebformSubmissionInterface $webform_submission): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
    */
-  public function alterForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission) {
+  public function alterForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
    */
-  public function validateForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission) {
+  public function validateForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission): void {
     $this->debug(__FUNCTION__);
     if ($value = $form_state->getValue('element')) {
       $form_state->setErrorByName('element', $this->t('The element must be empty. You entered %value.', ['%value' => $value]));
@@ -223,64 +243,68 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
    */
-  public function submitForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission) {
+  public function submitForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission): void {
+    $this->debug(__FUNCTION__);
+  }
+
+  /**
+   * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
+   */
+  public function confirmForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function confirmForm(array &$form, FormStateInterface $form_state, WebformSubmissionInterface $webform_submission) {
+  public function preCreate(array &$values): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function preCreate(array &$values) {
+  public function postCreate(WebformSubmissionInterface $webform_submission): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function postCreate(WebformSubmissionInterface $webform_submission) {
+  public function postLoad(WebformSubmissionInterface $webform_submission): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function postLoad(WebformSubmissionInterface $webform_submission) {
+  public function preDelete(WebformSubmissionInterface $webform_submission): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function preDelete(WebformSubmissionInterface $webform_submission) {
+  public function postDelete(WebformSubmissionInterface $webform_submission): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function postDelete(WebformSubmissionInterface $webform_submission) {
+  public function preSave(WebformSubmissionInterface $webform_submission): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function preSave(WebformSubmissionInterface $webform_submission) {
-    $this->debug(__FUNCTION__);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function postSave(WebformSubmissionInterface $webform_submission, $update = TRUE) {
+  public function postSave(WebformSubmissionInterface $webform_submission, $update = TRUE): void {
     $queueStorage = $this->entityTypeManager->getStorage('advancedqueue_queue');
     /** @var \Drupal\advancedqueue\Entity\Queue $queue */
     $queue = $queueStorage->load('os2forms_digital_post');
@@ -294,50 +318,59 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $variables
    */
-  public function preprocessConfirmation(array &$variables) {
+  public function preprocessConfirmation(array &$variables): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function createHandler() {
+  public function createHandler(): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function updateHandler() {
+  public function updateHandler(): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function deleteHandler() {
+  public function deleteHandler(): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $element
    */
-  public function createElement($key, array $element) {
+  public function createElement($key, array $element): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $element
+   * @phpstan-param array<string, mixed> $original_element
    */
-  public function updateElement($key, array $element, array $original_element) {
+  public function updateElement($key, array $element, array $original_element): void {
     $this->debug(__FUNCTION__);
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $element
    */
-  public function deleteElement($key, array $element) {
+  public function deleteElement($key, array $element): void {
     $this->debug(__FUNCTION__);
   }
 
@@ -349,7 +382,7 @@ class DigitalPostWebformHandler extends WebformHandlerBase {
    * @param string $context1
    *   Additional parameter passed to the invoked method name.
    */
-  protected function debug($method_name, $context1 = NULL) {
+  protected function debug($method_name, $context1 = NULL): void {
     if (!empty($this->configuration['debug'])) {
       $t_args = [
         '@id' => $this->getHandlerId(),
