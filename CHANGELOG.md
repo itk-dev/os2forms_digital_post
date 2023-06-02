@@ -17,6 +17,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Added the `CPR / Navn validering` element to allowed recipient element names
   [PR-43](https://github.com/itk-dev/os2forms_digital_post/pull/43)
+- Added API for sending digital post
+  [PR-40](https://github.com/itk-dev/os2forms_digital_post/pull/40)
 
 ## Changed
 
