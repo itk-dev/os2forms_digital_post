@@ -2,6 +2,8 @@
 
 namespace Drupal\os2forms_digital_post\Helper;
 
+use Drupal\os2forms_digital_post\Exception\InvalidForsendelseException;
+use Drupal\os2forms_digital_post\Model\Document;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drupal\os2web_datalookup\LookupResult\CompanyLookupResult;
 use Drupal\os2web_datalookup\LookupResult\CprLookupResult;
@@ -19,42 +21,49 @@ use Oio\Fjernprint\PostParametre;
  * Forsendelse helper.
  */
 class ForsendelseHelper extends AbstractMessageHelper {
-  public const FORSENDELSES_TYPE_IDENTIFIKATOR = 'forsendelses_type_identifikator';
-
   // PostKategoriKode.
   public const POST_KATEGORI_KODE_PRIORITAIRE = 'Prioritaire';
 
   /**
    * Build forsendelse.
-   *
-   * @phpstan-param array<string, mixed> $options
-   * @phpstan-param array<string, mixed> $handlerSettings
    */
-  public function buildForsendelse(WebformSubmissionInterface $submission, array $options, array $handlerSettings, CprLookupResult|CompanyLookupResult|null $recipientData = NULL): ForsendelseI {
+  public function buildForsendelse(CprLookupResult|CompanyLookupResult $recipientData, string $messageLabel, Document $document): ForsendelseI {
     $forsendelse = new ForsendelseI();
 
-    $label = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
+    $senderOptions = $this->settings->getSender();
     $forsendelse
       ->setPostParametre((new PostParametre())
         ->setPostKategoriKode(self::POST_KATEGORI_KODE_PRIORITAIRE))
       ->setForsendelseModtager($this->createModtager($recipientData))
-      ->setForsendelseTypeIdentifikator($options[self::FORSENDELSES_TYPE_IDENTIFIKATOR])
+      ->setForsendelseTypeIdentifikator($senderOptions[Settings::FORSENDELSES_TYPE_IDENTIFIKATOR])
       ->setAfsendelseIdentifikator(Serializer::createUuid())
       ->setTransaktionsParametreI()
       ->setDokumentParametre((new DokumentParametre())
-        ->setTitelTekst($label));
+        ->setTitelTekst($messageLabel));
 
-    $document = $this->getMainDocument($submission, $handlerSettings);
-    if (!$this->isPdf($document)) {
-      // This should never happen.
-      // @todo We cannot to handle non-PDF content.
+    if (!$document->isPdf()) {
+      throw new InvalidForsendelseException('Document must be a PDF');
     }
 
     $forsendelse
       ->setFilformatNavn('PDF')
-      ->setMeddelelseIndholdData($document[self::DOCUMENT_CONTENT]);
+      ->setMeddelelseIndholdData($document->content);
 
     return $forsendelse;
+
+  }
+
+  /**
+   * Build forsendelse form a webform submission.
+   *
+   * @phpstan-param array<string, mixed> $options
+   * @phpstan-param array<string, mixed> $handlerSettings
+   */
+  public function buildSubmissionForsendelse(WebformSubmissionInterface $submission, array $options, array $handlerSettings, CprLookupResult|CompanyLookupResult $recipientData): ForsendelseI {
+    $label = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
+    $document = $this->getMainDocument($submission, $handlerSettings);
+
+    return $this->buildForsendelse($recipientData, $label, $document);
   }
 
   /**

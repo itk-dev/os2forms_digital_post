@@ -3,9 +3,9 @@
 namespace Drupal\os2forms_digital_post\Commands;
 
 use DigitalPost\MeMo\Message;
-use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Helper\ForsendelseHelper;
 use Drupal\os2forms_digital_post\Helper\MeMoHelper;
+use Drupal\os2forms_digital_post\Helper\Settings;
 use Drupal\os2forms_digital_post\Helper\WebformHelperSF1601;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drush\Commands\DrushCommands;
@@ -109,13 +109,13 @@ final class CommandsSF1601 extends DrushCommands {
       WebformHelperSF1601::RECIPIENT_IDENTIFIER_TYPE => 'test',
       WebformHelperSF1601::RECIPIENT_IDENTIFIER => 'test',
 
-      SettingsForm::SENDER_IDENTIFIER_TYPE => 'test',
-      SettingsForm::SENDER_IDENTIFIER => 'test',
+      Settings::SENDER_IDENTIFIER_TYPE => 'test',
+      Settings::SENDER_IDENTIFIER => 'test',
 
       WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
-    $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings);
+    $message = $this->meMoHelper->buildWebformSubmissionMessage($submission, $messageOptions, $handlerSettings);
 
     if (isset($options['dump'])) {
       if (TRUE === $options['dump']) {
@@ -167,9 +167,9 @@ final class CommandsSF1601 extends DrushCommands {
     $messageOptions = [
       WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
-      ForsendelseHelper::FORSENDELSES_TYPE_IDENTIFIKATOR => 'test',
+      Settings::FORSENDELSES_TYPE_IDENTIFIKATOR => 'test',
     ];
-    $message = $this->forsendelseHelper->buildForsendelse($submission, $messageOptions, $handlerSettings);
+    $message = $this->forsendelseHelper->buildSubmissionForsendelse($submission, $messageOptions, $handlerSettings);
 
     if (isset($options['dump'])) {
       if (TRUE === $options['dump']) {
