@@ -9,6 +9,11 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Updates `dompdf/dompdf` requirement to `^2.0`
+  [PR-41](https://github.com/itk-dev/os2forms_digital_post/pull/41)
+
 ## [1.2.3]
 
 ### Changed
