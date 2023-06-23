@@ -9,6 +9,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [2.0.0]
+
 ### Changed
 
 - Updates `dompdf/dompdf` requirement to `^2.0`
@@ -59,7 +61,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   “KombiPostAfsend”](https://digitaliseringskataloget.dk/integration/sf1601).
 - Added GitHub Actions for coding standards checks and code analysis.
 
-[Unreleased]: https://github.com/itk-dev/os2forms_digital_post/compare/1.2.3...HEAD
+[Unreleased]: https://github.com/itk-dev/os2forms_digital_post/compare/2.0.0...HEAD
+[2.0.0]: https://github.com/itk-dev/os2forms_digital_post/compare/1.2.3...2.0.0
 [1.2.3]: https://github.com/itk-dev/os2forms_digital_post/compare/1.2.2...1.2.3
 [1.2.2]: https://github.com/itk-dev/os2forms_digital_post/compare/1.2.0...1.2.2
 [1.2.0]: https://github.com/itk-dev/os2forms_digital_post/compare/1.1.2...1.2.0
