@@ -2,8 +2,8 @@
 
 namespace Drupal\os2forms_digital_post\Consumer;
 
-use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Lock\LockBackendInterface;
 use Drupal\Core\State\State;
 use Drupal\os2forms_digital_post\Client\ClassMap;
@@ -18,14 +18,14 @@ use Drupal\os2forms_digital_post\Client\StructType\InvocationContextType;
 use Drupal\os2forms_digital_post\Client\StructType\KontaktOplysningType;
 use Drupal\os2forms_digital_post\Client\StructType\PrintAfsendBrevRequestType;
 use Drupal\os2forms_digital_post\Client\StructType\SlutbrugerIdentitetType;
+use GuzzleHttp\Client;
+use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
+use Http\Factory\Guzzle\RequestFactory;
+use ItkDev\AzureKeyVault\Authorisation\VaultToken;
+use ItkDev\AzureKeyVault\KeyVault\VaultSecret;
 use ItkDev\Serviceplatformen\Certificate\AzureKeyVaultCertificateLocator;
 use ItkDev\Serviceplatformen\Certificate\CertificateLocatorInterface;
 use WsdlToPhp\PackageBase\AbstractSoapClientBase;
-use GuzzleHttp\Client;
-use Http\Factory\Guzzle\RequestFactory;
-use ItkDev\AzureKeyVault\Authorisation\VaultToken;
-use Http\Adapter\Guzzle6\Client as GuzzleAdapter;
-use ItkDev\AzureKeyVault\KeyVault\VaultSecret;
 
 /**
  * Print service consumer.

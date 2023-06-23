@@ -2,11 +2,10 @@
 
 namespace Drupal\os2forms_digital_post\Manager;
 
-use Drupal\Core\Config\ImmutableConfig;
 use Dompdf\Css\Stylesheet;
 use Dompdf\Dompdf;
-use Dompdf\Options;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ImmutableConfig;
 use Drupal\Core\Template\TwigEnvironment;
 use Twig\Loader\FilesystemLoader;
 
@@ -79,8 +78,6 @@ class TemplateManager implements TemplateManagerInterface {
 
     $html = $this->renderHtml($template, $context);
 
-    $options = new Options();
-    $options->setIsHtml5ParserEnabled(TRUE);
     $domPdf = new Dompdf();
     $domPdf->setPaper('A4', 'portrait');
 

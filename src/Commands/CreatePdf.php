@@ -4,9 +4,9 @@ namespace Drupal\os2forms_digital_post\Commands;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
-use Drush\Commands\DrushCommands;
-use Drupal\os2forms_digital_post\Manager\TemplateManager;
 use Drupal\os2forms_digital_post\Helper\WebformHelper;
+use Drupal\os2forms_digital_post\Manager\TemplateManager;
+use Drush\Commands\DrushCommands;
 
 /**
  * A drush command file for commands related to os2forms_digital_post.
