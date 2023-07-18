@@ -160,14 +160,14 @@ final class WebformHelperSF1601 implements LoggerInterface {
 
     $recipientIdentifier = $submissionData[$recipientIdentifierKey] ?? NULL;
 
-    // Fix in case os2forms_person_lookup (cpr and name validation) element is used for recipient.
+    // Fix if os2forms_person_lookup (cpr & name validation) element is used.
     if (is_array($recipientIdentifier)) {
-        // Example:
-        // [
-        // 'cpr_number' => 1234567890,
-        // 'name' => Eksempel Eksempelsen,
-        //]
-        $recipientIdentifier = $recipientIdentifier['cpr_number'] ?? NULL;
+      // Example:
+      // [
+      // 'cpr_number' => 1234567890,
+      // 'name' => Eksempel Eksempelsen,
+      // ].
+      $recipientIdentifier = $recipientIdentifier['cpr_number'] ?? NULL;
     }
 
     if (NULL === $recipientIdentifier) {
