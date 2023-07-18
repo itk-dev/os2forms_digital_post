@@ -9,6 +9,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added the `CPR / Navn validering` element to allowed recipient element names
+
 ## [2.0.0]
 
 ### Changed
