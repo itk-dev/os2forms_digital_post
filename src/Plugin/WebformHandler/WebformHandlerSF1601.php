@@ -275,10 +275,10 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
       'os2forms_attachment',
     ];
     $elements = array_filter(
-        $elements,
-        static function (array $element) use ($elementTypes) {
-            return in_array($element['#type'], $elementTypes, TRUE);
-        }
+      $elements,
+      static function (array $element) use ($elementTypes) {
+        return in_array($element['#type'], $elementTypes, TRUE);
+      }
     );
 
     return array_map(static function (array $element) {
