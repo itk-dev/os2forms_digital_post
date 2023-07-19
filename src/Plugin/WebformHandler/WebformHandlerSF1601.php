@@ -270,10 +270,14 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   private function getAttachmentElements(): array {
     $elements = $this->getWebform()->getElementsDecodedAndFlattened();
 
+    $elementTypes = [
+      'webform_entity_print_attachment:pdf',
+      'os2forms_attachment',
+    ];
     $elements = array_filter(
       $elements,
-      static function (array $element) {
-        return preg_match('/^webform_entity_print_attachment:(pdf)$/', $element['#type'] ?? NULL);
+      static function (array $element) use ($elementTypes) {
+        return in_array($element['#type'], $elementTypes, TRUE);
       }
     );
 
