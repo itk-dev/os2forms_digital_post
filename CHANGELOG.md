@@ -9,6 +9,10 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## Changed
+
+- Updated allowed attachment elements to contain `os2forms_attachment`
+
 ## [2.0.0]
 
 ### Changed
