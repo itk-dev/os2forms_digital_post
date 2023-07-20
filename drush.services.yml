@@ -1,10 +1,4 @@
 services:
-  os2forms_digital_post.commands:
-    class: \Drupal\os2forms_digital_post\Commands\CreatePdf
-    arguments: ['@os2forms_digital_post.webform_helper', '@os2forms_digital_post.template_manager', '@entity_type.manager']
-    tags:
-      - { name: drush.command }
-
   Drupal\os2forms_digital_post\Commands\CommandsSF1601:
       arguments:
         - '@Drupal\os2forms_digital_post\Helper\WebformHelperSF1601'

@@ -1,6 +1,6 @@
 {
     "name": "os2forms/os2forms_digital_post",
-    "description": "Provides integration to Print service provided by Serviceplatformen.",
+    "description": "Provides integration to Afsend post service provided by Serviceplatformen.",
     "type": "drupal-module",
     "license": "MIT",
     "authors": [
@@ -22,8 +22,10 @@
     "prefer-stable": true,
     "require": {
         "php": "^8.1",
+        "ext-dom": "*",
         "ext-soap": "*",
         "dompdf/dompdf": "^2.0",
+        "drupal/advancedqueue": "^1.0",
         "drupal/webform": "^6.0",
         "drush/drush": "^10 || ^11",
         "http-interop/http-factory-guzzle": "^1.0.0",
@@ -33,7 +35,6 @@
         "os2web/os2web_datalookup": "^1.5",
         "php-http/guzzle6-adapter": "^2.0",
         "symfony/options-resolver": "^5.4 || ^6.0",
-        "symfony/property-access": "^4.4",
         "wsdltophp/packagebase": "^5.0"
     },
     "autoload": {

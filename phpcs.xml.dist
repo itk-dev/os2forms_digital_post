@@ -3,9 +3,7 @@
   <description>The coding standard.</description>
 
   <file>.</file>
-  <exclude-pattern>generated-sources/</exclude-pattern>
   <exclude-pattern>vendor/</exclude-pattern>
-  <exclude-pattern>src/Client/</exclude-pattern>
 
   <!-- Show progress of the run -->
   <arg value="p"/>

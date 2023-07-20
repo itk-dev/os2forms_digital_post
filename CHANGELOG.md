@@ -9,6 +9,9 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Removed
+- Removed support for [SF-1600](https://digitaliseringskataloget.dk/integration/sf1600).
+
 ### Added
 
 - Added the `CPR / Navn validering` element to allowed recipient element names
