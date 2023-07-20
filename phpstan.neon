@@ -6,9 +6,6 @@ parameters:
     # @see https://github.com/mglaman/drupal-check/issues/261#issuecomment-1030141772/
     - vendor
     - '*/node_modules/*'
-    # Auto-generated code
-    - generated-sources
-    - '*/Client/*'
   ignoreErrors:
     -
       # Ignore some weird errors reported by PHPStan
