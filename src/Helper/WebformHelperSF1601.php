@@ -159,6 +159,17 @@ final class WebformHelperSF1601 implements LoggerInterface {
     }
 
     $recipientIdentifier = $submissionData[$recipientIdentifierKey] ?? NULL;
+
+    // Fix if os2forms_person_lookup (cpr & name validation) element is used.
+    if (is_array($recipientIdentifier)) {
+      // Example:
+      // [
+      // 'cpr_number' => 1234567890,
+      // 'name' => Eksempel Eksempelsen,
+      // ].
+      $recipientIdentifier = $recipientIdentifier['cpr_number'] ?? NULL;
+    }
+
     if (NULL === $recipientIdentifier) {
       $message = 'Recipient identifier element (key: @element_key) not found in submission';
       $context = [
