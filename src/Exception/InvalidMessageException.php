@@ -5,6 +5,6 @@ namespace Drupal\os2forms_digital_post\Exception;
 /**
  * Invalid message exception.
  */
-class InvalidMessage extends RuntimeException {
+class InvalidMessageException extends RuntimeException {
 
 }

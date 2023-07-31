@@ -19,10 +19,6 @@ use Symfony\Component\OptionsResolver\Exception\ExceptionInterface as OptionsRes
 final class SettingsForm extends FormBase {
   use StringTranslationTrait;
 
-  public const SENDER_IDENTIFIER_TYPE = 'sender_identifier_type';
-  public const SENDER_IDENTIFIER = 'sender_identifier';
-  public const FORSENDELSES_TYPE_IDENTIFIKATOR = 'forsendelses_type_identifikator';
-
   /**
    * The settings.
    *
@@ -92,27 +88,27 @@ final class SettingsForm extends FormBase {
       '#title' => $this->t('Sender'),
       '#tree' => TRUE,
 
-      self::SENDER_IDENTIFIER_TYPE => [
+      Settings::SENDER_IDENTIFIER_TYPE => [
         '#type' => 'select',
         '#title' => $this->t('Identifier type'),
         '#options' => [
           'CVR' => $this->t('CVR'),
         ],
-        '#default_value' => $sender[self::SENDER_IDENTIFIER_TYPE] ?? 'CVR',
+        '#default_value' => $sender[Settings::SENDER_IDENTIFIER_TYPE] ?? 'CVR',
         '#required' => TRUE,
       ],
 
-      self::SENDER_IDENTIFIER => [
+      Settings::SENDER_IDENTIFIER => [
         '#type' => 'textfield',
         '#title' => $this->t('Identifier'),
-        '#default_value' => $sender[self::SENDER_IDENTIFIER] ?? NULL,
+        '#default_value' => $sender[Settings::SENDER_IDENTIFIER] ?? NULL,
         '#required' => TRUE,
       ],
 
-      self::FORSENDELSES_TYPE_IDENTIFIKATOR => [
+      Settings::FORSENDELSES_TYPE_IDENTIFIKATOR => [
         '#type' => 'textfield',
         '#title' => $this->t('Forsendelsestypeidentifikator'),
-        '#default_value' => $sender[self::FORSENDELSES_TYPE_IDENTIFIKATOR] ?? NULL,
+        '#default_value' => $sender[Settings::FORSENDELSES_TYPE_IDENTIFIKATOR] ?? NULL,
         '#required' => TRUE,
       ],
     ];

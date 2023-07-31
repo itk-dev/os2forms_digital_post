@@ -7,12 +7,10 @@ use Drupal\advancedqueue\Job;
 use Drupal\advancedqueue\JobResult;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Logger\LoggerChannelFactoryInterface;
 use Drupal\Core\Logger\LoggerChannelInterface;
 use Drupal\os2forms_digital_post\Exception\InvalidRecipientIdentifierElementException;
 use Drupal\os2forms_digital_post\Exception\RuntimeException;
 use Drupal\os2forms_digital_post\Exception\SubmissionNotFoundException;
-use Drupal\os2forms_digital_post\Form\SettingsForm;
 use Drupal\os2forms_digital_post\Plugin\AdvancedQueue\JobType\SendDigitalPostSF1601;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drupal\os2web_datalookup\Plugin\DataLookupManager;
@@ -20,7 +18,6 @@ use Drupal\os2web_datalookup\Plugin\os2web\DataLookup\DataLookupInterfaceCompany
 use Drupal\os2web_datalookup\Plugin\os2web\DataLookup\DataLookupInterfaceCpr;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformSubmissionStorageInterface;
-use ItkDev\Serviceplatformen\Service\SF1601\Serializer;
 use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LoggerTrait;
@@ -49,20 +46,6 @@ final class WebformHelperSF1601 implements LoggerInterface {
   protected EntityStorageInterface $queueStorage;
 
   /**
-   * The logger.
-   *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
-   */
-  protected LoggerChannelInterface $logger;
-
-  /**
-   * The submission logger.
-   *
-   * @var \Drupal\Core\Logger\LoggerChannelInterface
-   */
-  protected LoggerChannelInterface $submissionLogger;
-
-  /**
    * Constructor.
    */
   public function __construct(
@@ -73,12 +56,12 @@ final class WebformHelperSF1601 implements LoggerInterface {
     readonly private MeMoHelper $meMoHelper,
     readonly private ForsendelseHelper $forsendelseHelper,
     readonly private BeskedfordelerHelper $beskedfordelerHelper,
-    LoggerChannelFactoryInterface $loggerChannelFactory
+    readonly private LoggerChannelInterface $logger,
+    readonly private LoggerChannelInterface $submissionLogger,
+    readonly private DigitalPostHelper $digitalPostHelper
   ) {
     $this->webformSubmissionStorage = $entityTypeManager->getStorage('webform_submission');
     $this->queueStorage = $entityTypeManager->getStorage('advancedqueue_queue');
-    $this->logger = $loggerChannelFactory->get('os2forms_digital_post');
-    $this->submissionLogger = $loggerChannelFactory->get('webform_submission');
   }
 
   /**
@@ -160,39 +143,29 @@ final class WebformHelperSF1601 implements LoggerInterface {
       self::RECIPIENT_IDENTIFIER_TYPE => $recipientIdentifierType,
       self::RECIPIENT_IDENTIFIER => $recipientIdentifier,
 
-      SettingsForm::SENDER_IDENTIFIER_TYPE => $senderSettings[SettingsForm::SENDER_IDENTIFIER_TYPE],
-      SettingsForm::SENDER_IDENTIFIER => $senderSettings[SettingsForm::SENDER_IDENTIFIER],
+      Settings::SENDER_IDENTIFIER_TYPE => $senderSettings[Settings::SENDER_IDENTIFIER_TYPE],
+      Settings::SENDER_IDENTIFIER => $senderSettings[Settings::SENDER_IDENTIFIER],
 
       WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
-    $message = $this->meMoHelper->buildMessage($submission, $messageOptions, $handlerSettings, $lookupResult);
+    $message = $this->meMoHelper->buildWebformSubmissionMessage($submission, $messageOptions, $handlerSettings, $lookupResult);
     $forsendelseOptions = [
       self::RECIPIENT_IDENTIFIER_TYPE => $recipientIdentifierType,
       self::RECIPIENT_IDENTIFIER => $recipientIdentifier,
 
-      SettingsForm::SENDER_IDENTIFIER_TYPE => $senderSettings[SettingsForm::SENDER_IDENTIFIER_TYPE],
-      SettingsForm::SENDER_IDENTIFIER => $senderSettings[SettingsForm::SENDER_IDENTIFIER],
-      SettingsForm::FORSENDELSES_TYPE_IDENTIFIKATOR => $senderSettings[SettingsForm::FORSENDELSES_TYPE_IDENTIFIKATOR],
+      Settings::SENDER_IDENTIFIER_TYPE => $senderSettings[Settings::SENDER_IDENTIFIER_TYPE],
+      Settings::SENDER_IDENTIFIER => $senderSettings[Settings::SENDER_IDENTIFIER],
+      Settings::FORSENDELSES_TYPE_IDENTIFIKATOR => $senderSettings[Settings::FORSENDELSES_TYPE_IDENTIFIKATOR],
 
       WebformHandlerSF1601::SENDER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::SENDER_LABEL],
       WebformHandlerSF1601::MESSAGE_HEADER_LABEL => $handlerMessageSettings[WebformHandlerSF1601::MESSAGE_HEADER_LABEL],
     ];
-    $forsendelse = $this->forsendelseHelper->buildForsendelse($submission, $forsendelseOptions, $handlerSettings, $lookupResult);
+    $forsendelse = $this->forsendelseHelper->buildSubmissionForsendelse($submission, $forsendelseOptions, $handlerSettings, $lookupResult);
 
-    $options = [
-      'test_mode' => (bool) $this->settings->getTestMode(),
-      'authority_cvr' => $senderSettings[SettingsForm::SENDER_IDENTIFIER],
-      'certificate_locator' => $this->certificateLocatorHelper->getCertificateLocator(),
-    ];
-    $service = new SF1601($options);
-    $transactionId = Serializer::createUuid();
     $type = $handlerMessageSettings[WebformHandlerSF1601::TYPE] ?? SF1601::TYPE_DIGITAL_POST;
-    $response = $service->kombiPostAfsend($transactionId, $type, $message, $forsendelse);
 
-    $this->beskedfordelerHelper->createMessage($submission->id(), $message, (string) $response->getContent());
-
-    return [$response, $service->getLastKombiMeMoMessage()];
+    return $this->digitalPostHelper->sendDigitalPost($type, $message, $forsendelse, $submission);
   }
 
   /**
