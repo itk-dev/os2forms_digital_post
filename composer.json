@@ -27,7 +27,7 @@
         "dompdf/dompdf": "^2.0",
         "drupal/advancedqueue": "^1.0",
         "drupal/webform": "^6.0",
-        "drush/drush": "^10 || ^11",
+        "drush/drush": "^11 || ^12",
         "http-interop/http-factory-guzzle": "^1.0.0",
         "itk-dev/beskedfordeler-drupal": "^1.0",
         "itk-dev/serviceplatformen": "dev-feature/guzzle6-adapter as 1.5",
