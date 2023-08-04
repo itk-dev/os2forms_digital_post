@@ -4,7 +4,7 @@ namespace Drupal\os2forms_digital_post\Helper;
 
 use DigitalPost\MeMo\Message as MeMoMessage;
 use Drupal\Core\Database\Connection;
-use Drupal\os2forms_digital_post\Exception\InvalidMessage;
+use Drupal\os2forms_digital_post\Exception\InvalidMessageException;
 use Drupal\os2forms_digital_post\Model\Message;
 use Drupal\webform\WebformSubmissionInterface;
 use Psr\Log\LoggerAwareTrait;
@@ -85,7 +85,7 @@ class BeskedfordelerHelper {
     $message = $this->loadMessage($messageUUID);
 
     if (NULL === $message) {
-      throw new InvalidMessage(sprintf('Invalid message UUID: %s', $messageUUID));
+      throw new InvalidMessageException(sprintf('Invalid message UUID: %s', $messageUUID));
     }
 
     return $this->database

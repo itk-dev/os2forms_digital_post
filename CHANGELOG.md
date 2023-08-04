@@ -15,6 +15,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ### Changed
 
+- Added API for sending digital post
+  [PR-40](https://github.com/itk-dev/os2forms_digital_post/pull/40)
 - Changed dependency on CPR and CVR lookup modules. Handled physical post
   (“forsendelse”)
   [PR-37](https://github.com/itk-dev/os2forms_digital_post/pull/37)

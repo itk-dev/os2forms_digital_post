@@ -4,6 +4,7 @@ namespace Drupal\os2forms_digital_post\Helper;
 
 use DigitalPost\MeMo\Message;
 use Drupal\os2forms_digital_post\Exception\InvalidAttachmentElementException;
+use Drupal\os2forms_digital_post\Model\Document;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drupal\webform\Plugin\WebformElementManagerInterface;
 use Drupal\webform\WebformSubmissionInterface;
@@ -16,19 +17,12 @@ use Oio\Fjernprint\ForsendelseI;
  * Abstract message helper.
  */
 abstract class AbstractMessageHelper {
-  public const DOCUMENT_CONTENT = 'content';
-  public const DOCUMENT_SIZE = 'size';
-  public const DOCUMENT_MIME_TYPE = 'mime-type';
-  public const DOCUMENT_FILENAME = 'filename';
-  public const DOCUMENT_LANGUAGE = 'language';
-  public const DOCUMENT_LANGUAGE_DEFAULT = 'da';
-
-  protected const MIME_TYPE_PDF = 'application/pdf';
 
   /**
    * Constructor.
    */
   public function __construct(
+    readonly protected Settings $settings,
     readonly protected WebformElementManagerInterface $elementInfoManager,
     readonly protected WebformTokenManagerInterface $webformTokenManager
   ) {
@@ -42,7 +36,7 @@ abstract class AbstractMessageHelper {
    * @phpstan-param array<string, mixed> $handlerSettings
    * @phpstan-return array<string, mixed>
    */
-  protected function getMainDocument(WebformSubmissionInterface $submission, array $handlerSettings): array {
+  protected function getMainDocument(WebformSubmissionInterface $submission, array $handlerSettings): Document {
     // Lifted from Drupal\webform_attachment\Controller\WebformAttachmentController::download.
     $element = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE][WebformHandlerSF1601::ATTACHMENT_ELEMENT];
     $element = $submission->getWebform()->getElement($element) ?: [];
@@ -56,13 +50,11 @@ abstract class AbstractMessageHelper {
     $mimeType = $instance::getFileMimeType($element, $submission);
     $content = $instance::getFileContent($element, $submission);
 
-    return [
-      self::DOCUMENT_CONTENT => $content,
-      self::DOCUMENT_SIZE => strlen($content),
-      self::DOCUMENT_MIME_TYPE => $mimeType,
-      self::DOCUMENT_FILENAME => $fileName,
-      self::DOCUMENT_LANGUAGE => self::DOCUMENT_LANGUAGE_DEFAULT,
-    ];
+    return new Document(
+      $content,
+      $mimeType,
+      $fileName
+    );
   }
 
   /**
@@ -70,15 +62,6 @@ abstract class AbstractMessageHelper {
    */
   protected function replaceTokens(string $text, WebformSubmissionInterface $submission): string {
     return $this->webformTokenManager->replace($text, $submission);
-  }
-
-  /**
-   * Check if a document is a PDF document.
-   *
-   * @phpstan-param array<string, mixed> $document
-   */
-  protected function isPdf(array $document): bool {
-    return self::MIME_TYPE_PDF === $document[self::DOCUMENT_MIME_TYPE];
   }
 
   /**

@@ -14,7 +14,7 @@ use DigitalPost\MeMo\MessageBody;
 use DigitalPost\MeMo\MessageHeader;
 use DigitalPost\MeMo\Recipient;
 use DigitalPost\MeMo\Sender;
-use Drupal\os2forms_digital_post\Form\SettingsForm;
+use Drupal\os2forms_digital_post\Model\Document;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
 use Drupal\os2web_datalookup\LookupResult\CompanyLookupResult;
 use Drupal\os2web_datalookup\LookupResult\CprLookupResult;
@@ -28,35 +28,35 @@ use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
 class MeMoHelper extends AbstractMessageHelper {
 
   /**
-   * Build MeMo message.
-   *
-   * @phpstan-param array<string, mixed> $options
-   * @phpstan-param array<string, mixed> $handlerSettings
+   * Build message.
    */
-  public function buildMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, CprLookupResult|CompanyLookupResult|null $recipientData = NULL): Message {
+  public function buildMessage(CprLookupResult|CompanyLookupResult $recipientData, string $senderLabel, string $messageLabel, Document $document, array $actions): Message {
     $messageUUID = Serializer::createUuid();
     $messageID = Serializer::createUuid();
 
     $message = new Message();
 
-    $label = $this->replaceTokens($options[WebformHandlerSF1601::SENDER_LABEL], $submission);
+    $senderOptions = $this->settings->getSender();
     $sender = (new Sender())
-      ->setIdType($options[SettingsForm::SENDER_IDENTIFIER_TYPE])
-      ->setSenderID($options[SettingsForm::SENDER_IDENTIFIER])
-      ->setLabel($label);
+      ->setIdType($senderOptions[Settings::SENDER_IDENTIFIER_TYPE])
+      ->setSenderID($senderOptions[Settings::SENDER_IDENTIFIER])
+      ->setLabel($senderLabel);
+
+    [$recipientIdType, $recipientID] = $recipientData instanceof CompanyLookupResult
+      ? ['CVR', $recipientData->getCvr()]
+      : ['CPR', $recipientData->getCpr()];
 
     $recipient = (new Recipient())
-      ->setIdType($options[WebformHelperSF1601::RECIPIENT_IDENTIFIER_TYPE])
-      ->setRecipientID($options[WebformHelperSF1601::RECIPIENT_IDENTIFIER]);
+      ->setIdType($recipientIdType)
+      ->setRecipientID($recipientID);
 
     $this->enrichRecipient($recipient, $recipientData);
 
-    $label = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
     $messageHeader = (new MessageHeader())
       ->setMessageType(SF1601::MESSAGE_TYPE_DIGITAL_POST)
       ->setMessageUUID($messageUUID)
       ->setMessageID($messageID)
-      ->setLabel($label)
+      ->setLabel($messageLabel)
       ->setMandatory(FALSE)
       ->setLegalNotification(FALSE)
       ->setSender($sender)
@@ -67,21 +67,17 @@ class MeMoHelper extends AbstractMessageHelper {
     $body = (new MessageBody())
       ->setCreatedDateTime(new \DateTime());
 
-    $document = $this->getMainDocument($submission, $handlerSettings);
-
     $mainDocument = (new MainDocument())
       ->setFile([
         (new File())
-          ->setEncodingFormat($document[self::DOCUMENT_MIME_TYPE])
-          ->setLanguage($document[self::DOCUMENT_LANGUAGE])
-          ->setFilename($document[self::DOCUMENT_FILENAME])
-          ->setContent($document[self::DOCUMENT_CONTENT]),
+          ->setEncodingFormat($document->mimeType)
+          ->setLanguage($document->language)
+          ->setFilename($document->filename)
+          ->setContent($document->content),
       ]);
 
-    if (isset($handlerSettings[WebformHandlerSF1601::MEMO_ACTIONS]['actions'])) {
-      foreach ($handlerSettings[WebformHandlerSF1601::MEMO_ACTIONS]['actions'] as $spec) {
-        $mainDocument->addToAction($this->buildAction($spec, $submission));
-      }
+    foreach ($actions as $action) {
+      $mainDocument->addToAction($action);
     }
 
     $body->setMainDocument($mainDocument);
@@ -89,6 +85,26 @@ class MeMoHelper extends AbstractMessageHelper {
     $message->setMessageBody($body);
 
     return $message;
+  }
+
+  /**
+   * Build MeMo message from a webform submission.
+   *
+   * @phpstan-param array<string, mixed> $options
+   * @phpstan-param array<string, mixed> $handlerSettings
+   */
+  public function buildWebformSubmissionMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, CprLookupResult|CompanyLookupResult|null $recipientData = NULL): Message {
+    $senderLabel = $this->replaceTokens($options[WebformHandlerSF1601::SENDER_LABEL], $submission);
+    $messageLabel = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
+    $document = $this->getMainDocument($submission, $handlerSettings);
+    $actions = [];
+    if (isset($handlerSettings[WebformHandlerSF1601::MEMO_ACTIONS]['actions'])) {
+      foreach ($handlerSettings[WebformHandlerSF1601::MEMO_ACTIONS]['actions'] as $spec) {
+        $actions[] = $this->buildAction($spec, $submission);
+      }
+    }
+
+    return $this->buildMessage($recipientData, $senderLabel, $messageLabel, $document, $actions);
   }
 
   /**
