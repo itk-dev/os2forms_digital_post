@@ -3,10 +3,10 @@
 namespace Drupal\os2forms_digital_post\Helper;
 
 use DigitalPost\MeMo\Message;
+use Drupal\Core\Render\ElementInfoManager;
 use Drupal\os2forms_digital_post\Exception\InvalidAttachmentElementException;
 use Drupal\os2forms_digital_post\Model\Document;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
-use Drupal\webform\Plugin\WebformElementManagerInterface;
 use Drupal\webform\WebformSubmissionInterface;
 use Drupal\webform\WebformTokenManagerInterface;
 use Drupal\webform_attachment\Element\WebformAttachmentBase;
@@ -23,7 +23,7 @@ abstract class AbstractMessageHelper {
    */
   public function __construct(
     readonly protected Settings $settings,
-    readonly protected WebformElementManagerInterface $elementInfoManager,
+    readonly protected ElementInfoManager $elementInfoManager,
     readonly protected WebformTokenManagerInterface $webformTokenManager
   ) {
   }
@@ -42,6 +42,7 @@ abstract class AbstractMessageHelper {
     $element = $submission->getWebform()->getElement($element) ?: [];
     [$type] = explode(':', $element['#type']);
     $instance = $this->elementInfoManager->createInstance($type);
+
     if (!$instance instanceof WebformAttachmentBase) {
       throw new InvalidAttachmentElementException(sprintf('Attachment element must be an instance of %s. Found %s.', WebformAttachmentBase::class, get_class($instance)));
     }
