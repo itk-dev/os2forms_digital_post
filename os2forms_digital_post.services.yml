@@ -18,13 +18,13 @@ services:
   Drupal\os2forms_digital_post\Helper\MeMoHelper:
     arguments:
       - "@Drupal\\os2forms_digital_post\\Helper\\Settings"
-      - "@plugin.manager.webform.element"
+      - "@plugin.manager.element_info"
       - "@webform.token_manager"
 
   Drupal\os2forms_digital_post\Helper\ForsendelseHelper:
     arguments:
       - "@Drupal\\os2forms_digital_post\\Helper\\Settings"
-      - "@plugin.manager.webform.element"
+      - "@plugin.manager.element_info"
       - "@webform.token_manager"
 
   Drupal\os2forms_digital_post\Helper\DigitalPostHelper:
