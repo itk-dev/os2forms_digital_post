@@ -27,7 +27,7 @@ to get information on how or why not a digital post has been delivered. See
 Require it with composer:
 
 ```shell
-composer require "itk-dev/os2forms_digital_post"
+composer require "os2forms/os2forms_digital_post"
 ```
 
 Enable it with drush:
