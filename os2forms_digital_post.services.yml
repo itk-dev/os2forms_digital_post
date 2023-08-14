@@ -3,23 +3,9 @@ services:
     parent: logger.channel_base
     arguments: [ 'os2forms_digital_post' ]
 
-  os2forms_digital_post.template_manager:
-    class: Drupal\os2forms_digital_post\Manager\TemplateManager
-    arguments: ["@config.factory", "@twig", "@twig.loader.filesystem"]
-
-  os2forms_digital_post.print_service_consumer:
-    class: Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer
-    arguments: ["@config.factory", "@http_client", "@lock", "@state", "@uuid"]
-
-  os2forms_digital_post.webform_helper:
-    class: Drupal\os2forms_digital_post\Helper\WebformHelper
-    arguments:
-      - "@entity_type.manager"
-      - "@renderer"
-      - "@os2forms_cpr_lookup.service"
-      - "@os2forms_digital_post.print_service_consumer"
-      - "@os2forms_digital_post.template_manager"
-      - "@logger.factory"
+  logger.channel.os2forms_digital_post_submission:
+    parent: logger.channel_base
+    arguments: [ 'os2forms_digital_post_submission' ]
 
   Drupal\os2forms_digital_post\Helper\Settings:
     arguments:
@@ -31,19 +17,39 @@ services:
 
   Drupal\os2forms_digital_post\Helper\MeMoHelper:
     arguments:
-      - "@plugin.manager.element_info"
+      - "@Drupal\\os2forms_digital_post\\Helper\\Settings"
+      - "@plugin.manager.webform.element"
       - "@webform.token_manager"
+
+  Drupal\os2forms_digital_post\Helper\ForsendelseHelper:
+    arguments:
+      - "@Drupal\\os2forms_digital_post\\Helper\\Settings"
+      - "@plugin.manager.webform.element"
+      - "@webform.token_manager"
+
+  Drupal\os2forms_digital_post\Helper\DigitalPostHelper:
+    arguments:
+      - "@Drupal\\os2forms_digital_post\\Helper\\Settings"
+      - "@Drupal\\os2forms_digital_post\\Helper\\CertificateLocatorHelper"
+      - "@plugin.manager.os2web_datalookup"
+      - "@Drupal\\os2forms_digital_post\\Helper\\MeMoHelper"
+      - "@Drupal\\os2forms_digital_post\\Helper\\ForsendelseHelper"
+      - "@Drupal\\os2forms_digital_post\\Helper\\BeskedfordelerHelper"
+      - "@logger.channel.os2forms_digital_post"
+      - "@logger.channel.os2forms_digital_post_submission"
 
   Drupal\os2forms_digital_post\Helper\WebformHelperSF1601:
     arguments:
       - "@Drupal\\os2forms_digital_post\\Helper\\Settings"
       - "@Drupal\\os2forms_digital_post\\Helper\\CertificateLocatorHelper"
       - "@entity_type.manager"
-      - "@os2forms_cpr_lookup.service"
-      - "@os2forms_cvr_lookup.service"
+      - "@plugin.manager.os2web_datalookup"
       - "@Drupal\\os2forms_digital_post\\Helper\\MeMoHelper"
+      - "@Drupal\\os2forms_digital_post\\Helper\\ForsendelseHelper"
       - "@Drupal\\os2forms_digital_post\\Helper\\BeskedfordelerHelper"
-      - "@logger.factory"
+      - "@logger.channel.os2forms_digital_post"
+      - "@logger.channel.os2forms_digital_post_submission"
+      - "@Drupal\\os2forms_digital_post\\Helper\\DigitalPostHelper"
 
   Drupal\os2forms_digital_post\Helper\SF1461Helper:
 

@@ -4,7 +4,6 @@ namespace Drupal\os2forms_digital_post\Helper;
 
 use DataGovDk\Model\Core\Address;
 use DigitalPost\MeMo\Action;
-use DigitalPost\MeMo\AdditionalDocument;
 use DigitalPost\MeMo\AttentionData;
 use DigitalPost\MeMo\AttentionPerson;
 use DigitalPost\MeMo\EntryPoint;
@@ -15,79 +14,49 @@ use DigitalPost\MeMo\MessageBody;
 use DigitalPost\MeMo\MessageHeader;
 use DigitalPost\MeMo\Recipient;
 use DigitalPost\MeMo\Sender;
-use Drupal\Core\Render\ElementInfoManagerInterface;
-use Drupal\os2forms_cpr_lookup\CPR\CprServiceResult;
-use Drupal\os2forms_cvr_lookup\CVR\CvrServiceResult;
-use Drupal\os2forms_digital_post\Exception\InvalidAttachmentElementException;
-use Drupal\os2forms_digital_post\Exception\InvalidRecipientDataException;
-use Drupal\os2forms_digital_post\Form\SettingsForm;
+use Drupal\os2forms_digital_post\Model\Document;
 use Drupal\os2forms_digital_post\Plugin\WebformHandler\WebformHandlerSF1601;
+use Drupal\os2web_datalookup\LookupResult\CompanyLookupResult;
+use Drupal\os2web_datalookup\LookupResult\CprLookupResult;
 use Drupal\webform\WebformSubmissionInterface;
-use Drupal\webform\WebformTokenManagerInterface;
-use Drupal\webform_attachment\Element\WebformAttachmentBase;
 use ItkDev\Serviceplatformen\Service\SF1601\Serializer;
 use ItkDev\Serviceplatformen\Service\SF1601\SF1601;
 
 /**
  * MeMo helper.
  */
-class MeMoHelper {
-  public const DOCUMENT_CONTENT = 'content';
-  public const DOCUMENT_SIZE = 'size';
-  public const DOCUMENT_MIME_TYPE = 'mime-type';
-  public const DOCUMENT_FILENAME = 'filename';
-  public const DOCUMENT_LANGUAGE = 'language';
-  public const DOCUMENT_LANGUAGE_DEFAULT = 'da';
+class MeMoHelper extends AbstractMessageHelper {
 
   /**
-   * Element info.
-   *
-   * @var \Drupal\Core\Render\ElementInfoManagerInterface
+   * Build message.
    */
-  protected $elementInfoManager;
-
-  /**
-   * The webform token manager.
-   *
-   * @var \Drupal\webform\WebformTokenManagerInterface
-   */
-  protected $webformTokenManager;
-
-  /**
-   * Constructor.
-   */
-  public function __construct(ElementInfoManagerInterface $elementInfoManager, WebformTokenManagerInterface $webformTokenManager) {
-    $this->elementInfoManager = $elementInfoManager;
-    $this->webformTokenManager = $webformTokenManager;
-  }
-
-  /**
-   * Build MeMo message.
-   */
-  public function buildMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, array $submissionData = [], $recipientData = NULL): Message {
+  public function buildMessage(CprLookupResult|CompanyLookupResult $recipientData, string $senderLabel, string $messageLabel, Document $document, array $actions): Message {
     $messageUUID = Serializer::createUuid();
     $messageID = Serializer::createUuid();
 
     $message = new Message();
 
-    $label = $this->replaceTokens($options[WebformHandlerSF1601::SENDER_LABEL], $submission);
+    $senderOptions = $this->settings->getSender();
     $sender = (new Sender())
-      ->setIdType($options[SettingsForm::SENDER_IDENTIFIER_TYPE])
-      ->setSenderID($options[SettingsForm::SENDER_IDENTIFIER])
-      ->setLabel($label);
+      ->setIdType($senderOptions[Settings::SENDER_IDENTIFIER_TYPE])
+      ->setSenderID($senderOptions[Settings::SENDER_IDENTIFIER])
+      ->setLabel($senderLabel);
+
+    [$recipientIdType, $recipientID] = $recipientData instanceof CompanyLookupResult
+      ? ['CVR', $recipientData->getCvr()]
+      : ['CPR', $recipientData->getCpr()];
 
     $recipient = (new Recipient())
-      ->setIdType($options[WebformHelperSF1601::RECIPIENT_IDENTIFIER_TYPE])
-      ->setRecipientID($options[WebformHelperSF1601::RECIPIENT_IDENTIFIER]);
+      ->setIdType($recipientIdType)
+      ->setRecipientID($recipientID);
 
     $this->enrichRecipient($recipient, $recipientData);
 
-    $label = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
     $messageHeader = (new MessageHeader())
       ->setMessageType(SF1601::MESSAGE_TYPE_DIGITAL_POST)
       ->setMessageUUID($messageUUID)
       ->setMessageID($messageID)
-      ->setLabel($label)
+      ->setLabel($messageLabel)
       ->setMandatory(FALSE)
       ->setLegalNotification(FALSE)
       ->setSender($sender)
@@ -98,38 +67,20 @@ class MeMoHelper {
     $body = (new MessageBody())
       ->setCreatedDateTime(new \DateTime());
 
-    $document = $this->getMainDocument($submission, $handlerSettings);
-    $attachments = $this->getAttachments($submission, $handlerSettings);
-
     $mainDocument = (new MainDocument())
       ->setFile([
         (new File())
-          ->setEncodingFormat($document[self::DOCUMENT_MIME_TYPE])
-          ->setLanguage($document[self::DOCUMENT_LANGUAGE])
-          ->setFilename($document[self::DOCUMENT_FILENAME])
-          ->setContent($document[self::DOCUMENT_CONTENT]),
+          ->setEncodingFormat($document->mimeType)
+          ->setLanguage($document->language)
+          ->setFilename($document->filename)
+          ->setContent($document->content),
       ]);
 
-    if (isset($handlerSettings[WebformHandlerSF1601::MEMO_ACTIONS]['actions'])) {
-      foreach ($handlerSettings[WebformHandlerSF1601::MEMO_ACTIONS]['actions'] as $spec) {
-        $mainDocument->addToAction($this->buildAction($spec, $submission));
-      }
+    foreach ($actions as $action) {
+      $mainDocument->addToAction($action);
     }
 
     $body->setMainDocument($mainDocument);
-
-    foreach ($attachments as $attachment) {
-      $additionalDocument = (new AdditionalDocument())
-        ->setLabel($attachment['label'] ?? $attachment['filename'])
-        ->setFile([
-          (new File())
-            ->setEncodingFormat($attachment[self::DOCUMENT_MIME_TYPE])
-            ->setLanguage($attachment[self::DOCUMENT_LANGUAGE])
-            ->setFilename($attachment[self::DOCUMENT_FILENAME])
-            ->setContent($attachment[self::DOCUMENT_CONTENT]),
-        ]);
-      $body->addToAdditionalDocument($additionalDocument);
-    }
 
     $message->setMessageBody($body);
 
@@ -137,23 +88,38 @@ class MeMoHelper {
   }
 
   /**
+   * Build MeMo message from a webform submission.
+   *
+   * @phpstan-param array<string, mixed> $options
+   * @phpstan-param array<string, mixed> $handlerSettings
+   */
+  public function buildWebformSubmissionMessage(WebformSubmissionInterface $submission, array $options, array $handlerSettings, CprLookupResult|CompanyLookupResult|null $recipientData = NULL): Message {
+    $senderLabel = $this->replaceTokens($options[WebformHandlerSF1601::SENDER_LABEL], $submission);
+    $messageLabel = $this->replaceTokens($options[WebformHandlerSF1601::MESSAGE_HEADER_LABEL], $submission);
+    $document = $this->getMainDocument($submission, $handlerSettings);
+    $actions = [];
+    if (isset($handlerSettings[WebformHandlerSF1601::MEMO_ACTIONS]['actions'])) {
+      foreach ($handlerSettings[WebformHandlerSF1601::MEMO_ACTIONS]['actions'] as $spec) {
+        $actions[] = $this->buildAction($spec, $submission);
+      }
+    }
+
+    return $this->buildMessage($recipientData, $senderLabel, $messageLabel, $document, $actions);
+  }
+
+  /**
    * Enrich recipient with additional data from a lookup.
    */
-  private function enrichRecipient(Recipient $recipient, $recipientData = NULL): Recipient {
-    if ($recipientData instanceof CprServiceResult) {
-      $name = implode(' ', array_filter([
-        $recipientData->getFirstName(),
-        $recipientData->getMiddleName(),
-        $recipientData->getLastName(),
-      ]));
-
+  private function enrichRecipient(Recipient $recipient, CprLookupResult|CompanyLookupResult|null $recipientData): Recipient {
+    if ($recipientData instanceof CprLookupResult) {
+      $name = $recipientData->getName();
       $recipient->setLabel($name);
       $address = (new Address())
         ->setCo('')
-        ->setAddressLabel($recipientData->getStreetName() ?: '')
-        ->setHouseNumber($recipientData->getHouseNumber() ?: '')
+        ->setAddressLabel($recipientData->getStreet() ?: '')
+        ->setHouseNumber($recipientData->getHouseNr() ?: '')
         ->setFloor($recipientData->getFloor() ?: '')
-        ->setDoor($recipientData->getSide() ?: '')
+        ->setDoor($recipientData->getApartmentNr() ?: '')
         ->setZipCode($recipientData->getPostalCode() ?: '')
         ->setCity($recipientData->getCity() ?: '')
         ->setCountry('DA');
@@ -166,16 +132,16 @@ class MeMoHelper {
 
       $recipient->setAttentionData($attentionData);
     }
-    elseif ($recipientData instanceof CvrServiceResult) {
+    elseif ($recipientData instanceof CompanyLookupResult) {
       $name = $recipientData->getName();
 
       $recipient->setLabel($name);
       $address = (new Address())
         ->setCo('')
-        ->setAddressLabel($recipientData->getStreetName() ?: '')
-        ->setHouseNumber($recipientData->getHouseNumber() ?: '')
+        ->setAddressLabel($recipientData->getStreet() ?: '')
+        ->setHouseNumber($recipientData->getHouseNr() ?: '')
         ->setFloor($recipientData->getFloor() ?: '')
-        ->setDoor($recipientData->getSide() ?: '')
+        ->setDoor($recipientData->getApartmentNr() ?: '')
         ->setZipCode($recipientData->getPostalCode() ?: '')
         ->setCity($recipientData->getCity() ?: '')
         ->setCountry('DA');
@@ -187,26 +153,15 @@ class MeMoHelper {
         ->setAddress($address);
 
       $recipient->setAttentionData($attentionData);
-    }
-    elseif (NULL !== $recipientData) {
-      throw new InvalidRecipientDataException(sprintf('Cannot handle recipient data of type %s', is_scalar($recipientData) ? gettype($recipientData) : get_class($recipientData)));
     }
 
     return $recipient;
   }
 
   /**
-   * Convert MeMo message to DOM document.
-   */
-  public function message2dom(Message $message): \DOMDocument {
-    $document = new \DOMDocument();
-    $document->loadXML((new Serializer())->serialize($message));
-
-    return $document;
-  }
-
-  /**
    * Build action.
+   *
+   * @phpstan-param array<string, mixed> $options
    */
   private function buildAction(array $options, WebformSubmissionInterface $submission): Action {
     $label = $this->replaceTokens($options['label'], $submission);
@@ -225,48 +180,6 @@ class MeMoHelper {
     }
 
     return $action;
-  }
-
-  /**
-   * Get main document.
-   *
-   * @see WebformAttachmentController::download()
-   */
-  private function getMainDocument(WebformSubmissionInterface $submission, array $handlerSettings): array {
-    // Lifted from Drupal\webform_attachment\Controller\WebformAttachmentController::download.
-    $element = $handlerSettings[WebformHandlerSF1601::MEMO_MESSAGE][WebformHandlerSF1601::ATTACHMENT_ELEMENT];
-    $element = $submission->getWebform()->getElement($element) ?: [];
-    [$type] = explode(':', $element['#type']);
-    $instance = $this->elementInfoManager->createInstance($type);
-    if (!$instance instanceof WebformAttachmentBase) {
-      throw new InvalidAttachmentElementException(sprintf('Attachment element must be an instance of %s. Found %s.', WebformAttachmentBase::class, get_class($instance)));
-    }
-
-    $fileName = $instance::getFileName($element, $submission);
-    $mimeType = $instance::getFileMimeType($element, $submission);
-    $content = $instance::getFileContent($element, $submission);
-
-    return [
-      self::DOCUMENT_CONTENT => $content,
-      self::DOCUMENT_SIZE => strlen($content),
-      self::DOCUMENT_MIME_TYPE => $mimeType,
-      self::DOCUMENT_FILENAME => $fileName,
-      self::DOCUMENT_LANGUAGE => self::DOCUMENT_LANGUAGE_DEFAULT,
-    ];
-  }
-
-  /**
-   * Get attachments.
-   */
-  private function getAttachments(WebformSubmissionInterface $submission, array $handlerSettings): array {
-    return [];
-  }
-
-  /**
-   * Replace tokens.
-   */
-  private function replaceTokens(string $text, WebformSubmissionInterface $submission): string {
-    return $this->webformTokenManager->replace($text, $submission);
   }
 
 }

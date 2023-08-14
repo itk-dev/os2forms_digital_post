@@ -29,6 +29,8 @@ final class SendDigitalPostSF1601 extends JobTypeBase implements ContainerFactor
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $configuration
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
@@ -41,6 +43,8 @@ final class SendDigitalPostSF1601 extends JobTypeBase implements ContainerFactor
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $configuration
    */
   public function __construct(
     array $configuration,

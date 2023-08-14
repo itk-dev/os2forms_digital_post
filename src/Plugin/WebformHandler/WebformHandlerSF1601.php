@@ -42,41 +42,6 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
   private const MESSAGE_HEADER_LABEL_MAX_LENGTH = 128;
 
   /**
-   * The token manager.
-   *
-   * @var \Drupal\webform\WebformTokenManagerInterface
-   */
-  protected $tokenManager;
-
-  /**
-   * The webform helper.
-   *
-   * @var \Drupal\os2forms_digital_post\WebformHelper
-   */
-  protected $webformHelper;
-
-  /**
-   * The template manager.
-   *
-   * @var \Drupal\os2forms_digital_post\Manager\TemplateManager
-   */
-  protected $templateManager;
-
-  /**
-   * The print service consumer.
-   *
-   * @var \Drupal\os2forms_digital_post\Consumer\PrintServiceConsumer
-   */
-  protected $printServiceConsumer;
-
-  /**
-   * The cpr service.
-   *
-   * @var \Drupal\os2forms_cpr_lookup\Service\CprServiceInterface
-   */
-  protected $cprService;
-
-  /**
    * The webform helper.
    *
    * @var \Drupal\os2forms_digital_post\Helper\WebformHelperSF1601
@@ -85,6 +50,8 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $configuration
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     $instance = new static($configuration, $plugin_id, $plugin_definition);
@@ -95,10 +62,6 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
     $instance->entityTypeManager = $container->get('entity_type.manager');
     $instance->conditionsValidator = $container->get('webform_submission.conditions_validator');
     $instance->tokenManager = $container->get('webform.token_manager');
-    $instance->webformHelper = $container->get('os2forms_digital_post.webform_helper');
-    $instance->templateManager = $container->get('os2forms_digital_post.template_manager');
-    $instance->printServiceConsumer = $container->get('os2forms_digital_post.print_service_consumer');
-    $instance->cprService = $container->get('os2forms_cpr_lookup.service');
     $instance->helper = $container->get(WebformHelperSF1601::class);
 
     $instance->setConfiguration($configuration);
@@ -108,6 +71,8 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-return array<string, mixed>
    */
   public function defaultConfiguration() {
     return [
@@ -117,6 +82,9 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
+   * @phpstan-return array<string, mixed>
    */
   public function buildConfigurationForm(array $form, FormStateInterface $formState) {
     $form[self::MEMO_MESSAGE] = [
@@ -237,6 +205,8 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
   /**
    * Get recipient elements.
+   *
+   * @phpstan-return array<string, mixed>
    */
   private function getRecipientElements(): array {
     $elements = $this->getWebform()->getElementsDecodedAndFlattened();
@@ -267,6 +237,8 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
   /**
    * Get attachment elements.
+   *
+   * @phpstan-return array<string, mixed>
    */
   private function getAttachmentElements(): array {
     $elements = $this->getWebform()->getElementsDecodedAndFlattened();
@@ -289,6 +261,9 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
+   * @phpstan-return void
    */
   public function validateConfigurationForm(array &$form, FormStateInterface $formState) {
     $actions = $formState->getValue(self::MEMO_ACTIONS)['actions'] ?? [];
@@ -320,6 +295,9 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
+   * @phpstan-return void
    */
   public function submitConfigurationForm(array &$form, FormStateInterface $formState) {
     parent::submitConfigurationForm($form, $formState);
@@ -340,6 +318,8 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-return void
    */
   public function postSave(WebformSubmissionInterface $webformSubmission, $update = TRUE) {
     $this->helper->createJob($webformSubmission, $this->configuration);
@@ -347,6 +327,8 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-return void
    */
   public function postDelete(WebformSubmissionInterface $webformSubmission) {
     $this->helper->deleteMessages([$webformSubmission]);
@@ -354,52 +336,36 @@ final class WebformHandlerSF1601 extends WebformHandlerBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-return void
    */
   public function postPurge(array $webformSubmissions) {
     $this->helper->deleteMessages($webformSubmissions);
   }
 
   /**
-   * Display the invoked plugin method to end user.
-   *
-   * @param string $method_name
-   *   The invoked method name.
-   * @param string $context1
-   *   Additional parameter passed to the invoked method name.
-   */
-  protected function debug($method_name, $context1 = NULL) {
-    if (!empty($this->configuration['debug'])) {
-      $t_args = [
-        '@id' => $this->getHandlerId(),
-        '@class_name' => get_class($this),
-        '@method_name' => $method_name,
-        '@context1' => $context1,
-      ];
-      $this->messenger()->addWarning($this->t('Invoked @id: @class_name:@method_name @context1', $t_args), TRUE);
-    }
-  }
-
-  /**
    * Translated action names.
    *
    * @var array|null
+   *
+   * @phpstan-var array<string, string>
    */
   private ?array $translatedActionNames = NULL;
 
   /**
    * Get translated action name.
    */
-  private function getTranslatedActionName(string $action) {
+  private function getTranslatedActionName(string $action): string {
     if (NULL === $this->translatedActionNames) {
       $this->translatedActionNames = [
-        SF1601::ACTION_AFTALE => $this->t('Aftale', [], ['context' => 'memo action']),
-        SF1601::ACTION_BEKRAEFT => $this->t('Bekræft', [], ['context' => 'memo action']),
-        SF1601::ACTION_BETALING => $this->t('Betaling', [], ['context' => 'memo action']),
-        SF1601::ACTION_FORBEREDELSE => $this->t('Forberedelse', [], ['context' => 'memo action']),
-        SF1601::ACTION_INFORMATION => $this->t('Information', [], ['context' => 'memo action']),
-        SF1601::ACTION_SELVBETJENING => $this->t('Selvbetjening', [], ['context' => 'memo action']),
-        SF1601::ACTION_TILMELDING => $this->t('Tilmelding', [], ['context' => 'memo action']),
-        SF1601::ACTION_UNDERSKRIV => $this->t('Underskriv', [], ['context' => 'memo action']),
+        SF1601::ACTION_AFTALE => (string) $this->t('Aftale', [], ['context' => 'memo action']),
+        SF1601::ACTION_BEKRAEFT => (string) $this->t('Bekræft', [], ['context' => 'memo action']),
+        SF1601::ACTION_BETALING => (string) $this->t('Betaling', [], ['context' => 'memo action']),
+        SF1601::ACTION_FORBEREDELSE => (string) $this->t('Forberedelse', [], ['context' => 'memo action']),
+        SF1601::ACTION_INFORMATION => (string) $this->t('Information', [], ['context' => 'memo action']),
+        SF1601::ACTION_SELVBETJENING => (string) $this->t('Selvbetjening', [], ['context' => 'memo action']),
+        SF1601::ACTION_TILMELDING => (string) $this->t('Tilmelding', [], ['context' => 'memo action']),
+        SF1601::ACTION_UNDERSKRIV => (string) $this->t('Underskriv', [], ['context' => 'memo action']),
       ];
     }
 

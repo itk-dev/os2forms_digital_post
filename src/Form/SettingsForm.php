@@ -2,8 +2,8 @@
 
 namespace Drupal\os2forms_digital_post\Form;
 
-use Drupal\advancedqueue\Entity\QueueInterface;
-use Drupal\Core\Config\Entity\ConfigEntityStorage;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -19,9 +19,6 @@ use Symfony\Component\OptionsResolver\Exception\ExceptionInterface as OptionsRes
 final class SettingsForm extends FormBase {
   use StringTranslationTrait;
 
-  public const SENDER_IDENTIFIER_TYPE = 'sender_identifier_type';
-  public const SENDER_IDENTIFIER = 'sender_identifier';
-
   /**
    * The settings.
    *
@@ -32,9 +29,9 @@ final class SettingsForm extends FormBase {
   /**
    * The queue storage.
    *
-   * @var \Drupal\Core\Config\Entity\ConfigEntityStorage|\Drupal\Core\Entity\EntityStorageInterface
+   * @var \Drupal\Core\Entity\EntityStorageInterface
    */
-  protected ConfigEntityStorage $queueStorage;
+  protected EntityStorageInterface $queueStorage;
 
   /**
    * The certificate locator helper.
@@ -49,12 +46,13 @@ final class SettingsForm extends FormBase {
   public function __construct(Settings $settings, EntityTypeManagerInterface $entityTypeManager, CertificateLocatorHelper $certificateLocatorHelper) {
     $this->settings = $settings;
     $this->queueStorage = $entityTypeManager->getStorage('advancedqueue_queue');
-
     $this->certificateLocatorHelper = $certificateLocatorHelper;
   }
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-return self
    */
   public static function create(ContainerInterface $container) {
     return new static(
@@ -73,6 +71,9 @@ final class SettingsForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
+   * @phpstan-return array<string, mixed>
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
     $form['test_mode'] = [
@@ -87,20 +88,27 @@ final class SettingsForm extends FormBase {
       '#title' => $this->t('Sender'),
       '#tree' => TRUE,
 
-      self::SENDER_IDENTIFIER_TYPE => [
+      Settings::SENDER_IDENTIFIER_TYPE => [
         '#type' => 'select',
         '#title' => $this->t('Identifier type'),
         '#options' => [
           'CVR' => $this->t('CVR'),
         ],
-        '#default_value' => $sender[self::SENDER_IDENTIFIER_TYPE] ?? 'CVR',
+        '#default_value' => $sender[Settings::SENDER_IDENTIFIER_TYPE] ?? 'CVR',
         '#required' => TRUE,
       ],
 
-      self::SENDER_IDENTIFIER => [
+      Settings::SENDER_IDENTIFIER => [
         '#type' => 'textfield',
         '#title' => $this->t('Identifier'),
-        '#default_value' => $sender[self::SENDER_IDENTIFIER] ?? NULL,
+        '#default_value' => $sender[Settings::SENDER_IDENTIFIER] ?? NULL,
+        '#required' => TRUE,
+      ],
+
+      Settings::FORSENDELSES_TYPE_IDENTIFIKATOR => [
+        '#type' => 'textfield',
+        '#title' => $this->t('Forsendelsestypeidentifikator'),
+        '#default_value' => $sender[Settings::FORSENDELSES_TYPE_IDENTIFIKATOR] ?? NULL,
         '#required' => TRUE,
       ],
     ];
@@ -143,7 +151,6 @@ final class SettingsForm extends FormBase {
       $form['certificate'][CertificateLocatorHelper::LOCATOR_TYPE_AZURE_KEY_VAULT][$key] = [
         '#type' => 'textfield',
         '#title' => $info['title'],
-        '#description' => $info['description'] ?? NULL,
         '#default_value' => $certificate[CertificateLocatorHelper::LOCATOR_TYPE_AZURE_KEY_VAULT][$key] ?? NULL,
         '#states' => [
           'required' => [':input[name="certificate[locator_type]"]' => ['value' => CertificateLocatorHelper::LOCATOR_TYPE_AZURE_KEY_VAULT]],
@@ -185,9 +192,9 @@ final class SettingsForm extends FormBase {
     $form['processing']['queue'] = [
       '#type' => 'select',
       '#title' => $this->t('Queue'),
-      '#options' => array_map(static function (QueueInterface $queue) {
-        return $queue->label();
-      }, $this->queueStorage->loadMultiple()
+      '#options' => array_map(
+        static fn(EntityInterface $queue) => $queue->label(),
+        $this->queueStorage->loadMultiple()
       ),
       '#default_value' => $defaultValue,
       '#description' => $this->t("Queue for digital post jobs. <a href=':queue_url'>The queue</a> must be run via Drupal's cron or via <code>drush advancedqueue:queue:process @queue</code>(in a cron job).", [
@@ -214,8 +221,10 @@ final class SettingsForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
    */
-  public function validateForm(array &$form, FormStateInterface $formState) {
+  public function validateForm(array &$form, FormStateInterface $formState): void {
     $triggeringElement = $formState->getTriggeringElement();
     if ('testCertificate' === ($triggeringElement['#name'] ?? NULL)) {
       return;
@@ -232,8 +241,10 @@ final class SettingsForm extends FormBase {
 
   /**
    * {@inheritdoc}
+   *
+   * @phpstan-param array<string, mixed> $form
    */
-  public function submitForm(array &$form, FormStateInterface $formState) {
+  public function submitForm(array &$form, FormStateInterface $formState): void {
     $triggeringElement = $formState->getTriggeringElement();
     if ('testCertificate' === ($triggeringElement['#name'] ?? NULL)) {
       $this->testCertificate();
@@ -256,11 +267,10 @@ final class SettingsForm extends FormBase {
   /**
    * Test certificate.
    */
-  private function testCertificate() {
+  private function testCertificate(): void {
     try {
       $certificateLocator = $this->certificateLocatorHelper->getCertificateLocator();
       $certificateLocator->getCertificates();
-      $certificateLocator->getAbsolutePathToCertificate();
       $this->messenger()->addStatus($this->t('Certificate succesfully tested'));
     }
     catch (\Throwable $throwable) {

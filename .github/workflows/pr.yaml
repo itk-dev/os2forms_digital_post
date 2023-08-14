@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-versions: [ '7.4' ]
+        php-versions: [ '8.1' ]
         dependency-version: [ prefer-stable ]
     steps:
       - uses: actions/checkout@master
@@ -55,7 +55,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-versions: [ '7.4' ]
+        php-versions: [ '8.1' ]
         dependency-version: [ prefer-stable ]
     steps:
       - uses: actions/checkout@master
@@ -89,7 +89,7 @@ jobs:
   #   runs-on: ubuntu-latest
   #   strategy:
   #     matrix:
-  #       php-versions: [ '7.4' ]
+  #       php-versions: [ '8.1' ]
   #       dependency-version: [ prefer-stable ]
   #   steps:
   #     - uses: actions/checkout@master
@@ -117,16 +117,13 @@ jobs:
   #         composer --no-interaction create-project drupal/recommended-project:^9 drupal
   #         # Copy our module source code into the Drupal module folder.
   #         mkdir -p drupal/web/modules/contrib/os2forms_digital_post
-  #         cp -r os2forms_digital_post.* composer.json src drupal/web/modules/contrib/os2forms_digital_post
+  #         rsync --archive --compress . --exclude drupal --exclude .git drupal/web/modules/contrib/os2forms_digital_post
 
   #         composer --working-dir=drupal --no-interaction config minimum-stability dev
 
-  #         # Add repositories from our composer.json (which see).
-  #         # @see https://getcomposer.org/doc/03-cli.md#modifying-repositories
-  #         composer --working-dir=drupal --no-interaction config repositories.drupal/webform_embed "$(composer config repositories.drupal/webform_embed)"
-
   #         # Allow plugins
   #         composer --working-dir=drupal config --no-plugins allow-plugins.vaimo/composer-patches true
+  #         composer --working-dir=drupal config --no-plugins allow-plugins.cweagans/composer-patches true
 
   #         # Add our module as a composer repository.
   #         composer --working-dir=drupal --no-interaction config --append repositories.itk-dev/os2forms_digital_post path web/modules/contrib/os2forms_digital_post
@@ -137,7 +134,7 @@ jobs:
   #         composer --working-dir=drupal --no-interaction require 'itk-dev/os2forms_digital_post:*'
 
   #         # Check code
-  #         composer --working-dir=drupal --no-interaction require --dev drupal/core-dev
+  #         # composer --working-dir=drupal --no-interaction require --dev drupal/core-dev
   #         cd drupal/web/modules/contrib/os2forms_digital_post
   #         # Remove our non-dev dependencies to prevent duplicated Drupal installation
   #         # PHP Fatal error:  Cannot redeclare drupal_get_filename() (previously declared in /home/runner/work/os2forms_digital_post/os2forms_digital_post/drupal/web/modules/contrib/os2forms_digital_post/vendor/drupal/core/includes/bootstrap.inc:190) in /home/runner/work/os2forms_digital_post/os2forms_digital_post/drupal/web/core/includes/bootstrap.inc on line 190

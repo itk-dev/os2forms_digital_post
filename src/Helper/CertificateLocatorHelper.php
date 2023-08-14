@@ -20,17 +20,11 @@ class CertificateLocatorHelper {
   public const LOCATOR_TYPE_FILE_SYSTEM = 'file_system';
 
   /**
-   * The settings.
-   *
-   * @var \Drupal\os2forms_digital_post\SettingsInterface|Settings
-   */
-  private Settings $settings;
-
-  /**
    * {@inheritdoc}
    */
-  public function __construct(Settings $settings) {
-    $this->settings = $settings;
+  public function __construct(
+    readonly private Settings $settings
+  ) {
   }
 
   /**

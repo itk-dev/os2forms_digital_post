@@ -11,6 +11,10 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
  * General settings for os2forms_digital_post.
  */
 final class Settings {
+  public const SENDER_IDENTIFIER_TYPE = 'sender_identifier_type';
+  public const SENDER_IDENTIFIER = 'sender_identifier';
+  public const FORSENDELSES_TYPE_IDENTIFIKATOR = 'forsendelses_type_identifikator';
+
   /**
    * The store.
    *
@@ -41,6 +45,8 @@ final class Settings {
 
   /**
    * Get sender.
+   *
+   * @phpstan-return array<string, mixed>
    */
   public function getSender(): array {
     $value = $this->get('sender');
@@ -49,6 +55,8 @@ final class Settings {
 
   /**
    * Get certificate.
+   *
+   * @phpstan-return array<string, mixed>
    */
   public function getCertificate(): array {
     $value = $this->get('certificate');
@@ -57,6 +65,8 @@ final class Settings {
 
   /**
    * Get processing.
+   *
+   * @phpstan-return array<string, mixed>
    */
   public function getProcessing(): array {
     $value = $this->get('processing');

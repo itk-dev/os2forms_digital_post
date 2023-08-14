@@ -9,6 +9,21 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added API for sending digital post
+  [PR-40](https://github.com/itk-dev/os2forms_digital_post/pull/40)
+
+### Changed
+
+- Changed dependency on CPR and CVR lookup modules. Handled physical post
+  (“forsendelse”)
+  [PR-37](https://github.com/itk-dev/os2forms_digital_post/pull/37)
+
+### Removed
+
+- Removed support for [SF-1600](https://digitaliseringskataloget.dk/integration/sf1600).
+
 ## [2.0.2]
 
 ### Added

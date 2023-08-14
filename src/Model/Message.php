@@ -46,7 +46,7 @@ class Message {
   /**
    * Called when using \PDO::FETCH_CLASS.
    */
-  public function __set($name, $value) {
+  public function __set(string $name, mixed $value): void {
     $property = [
       'submission_id' => 'submissionId',
       'message_uuid' => 'messageUUID',

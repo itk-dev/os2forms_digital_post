@@ -2,12 +2,11 @@ name: 'OS2Forms Digital Post'
 type: module
 description: 'Provides integration to Print service provided by Serviceplatformen.'
 package: 'OS2Forms'
-core: 8.x
-core_version_requirement: ^8 || ^9
+core_version_requirement: ^9
 dependencies:
   - 'beskedfordeler:beskedfordeler'
-  - 'os2forms_cpr_lookup:os2forms_cpr_lookup'
-  - 'os2forms_cvr_lookup:os2forms_cvr_lookup'
+  - 'drupal:advancedqueue'
+  - 'os2web_datalookup:os2web_datalookup'
   - 'webform:webform'
   - 'webform:webform_submission_log'
 
