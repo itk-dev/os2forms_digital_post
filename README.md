@@ -1,3 +1,5 @@
+**Warning**: This repository has been archived. Use the [os2forms_digital_post module](https://github.com/OS2Forms/os2forms/tree/develop/modules/os2forms_digital_post) in [OS2Forms/os2forms](https://github.com/OS2Forms/os2forms).
+
 # OS2Forms Digital Post
 
 Send Digital Post to danish citizens from a webform.
