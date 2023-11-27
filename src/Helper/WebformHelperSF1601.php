@@ -218,6 +218,7 @@ final class WebformHelperSF1601 implements LoggerInterface {
    */
   public function createJob(WebformSubmissionInterface $webformSubmission, array $handlerConfiguration): ?Job {
     $context = [
+      'handler_id' => 'os2forms_digital_post',
       'webform_submission' => $webformSubmission,
     ];
 
@@ -231,7 +232,6 @@ final class WebformHelperSF1601 implements LoggerInterface {
       $queue->enqueueJob($job);
       $context['@queue'] = $queue->id();
       $this->notice('Job for sending digital post add to the queue @queue.', $context + [
-        'handler_id' => 'os2forms_digital_post',
         'operation' => 'digital post queued for sending',
       ]);
 
@@ -239,7 +239,6 @@ final class WebformHelperSF1601 implements LoggerInterface {
     }
     catch (\Exception $exception) {
       $this->error('Error creating job for sending digital post.', $context + [
-        'handler_id' => 'os2forms_digital_post',
         'operation' => 'digital post failed',
       ]);
       return NULL;
@@ -254,6 +253,10 @@ final class WebformHelperSF1601 implements LoggerInterface {
   public function processJob(Job $job): JobResult {
     $payload = $job->getPayload();
 
+    $context = [
+      'handler_id' => 'os2forms_digital_post',
+      'operation' => 'digital post send',
+    ];
     try {
       $submissionId = $payload['submissionId'];
       $submission = $this->loadSubmission($submissionId);
@@ -268,21 +271,16 @@ final class WebformHelperSF1601 implements LoggerInterface {
           $message));
       }
 
+      $context['webform_submission'] = $submission;
       $this->sendDigitalPost($submission, $payload['handlerConfiguration']);
 
-      $this->notice('Digital post sent', [
-        'handler_id' => 'os2forms_digital_post',
-        'operation' => 'digital post send',
-        'webform_submission' => $submission,
-      ]);
+      $this->notice('Digital post sent', $context);
 
       return JobResult::success();
     }
     catch (\Exception $e) {
-      $this->error('Error: @message', [
+      $this->error('Error: @message', $context + [
         '@message' => $e->getMessage(),
-        'handler_id' => 'os2forms_digital_post',
-        'operation' => 'digital post send',
       ]);
 
       return JobResult::failure($e->getMessage());
